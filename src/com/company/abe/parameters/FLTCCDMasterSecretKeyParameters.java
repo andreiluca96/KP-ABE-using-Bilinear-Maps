@@ -1,16 +1,23 @@
 package com.company.abe.parameters;
 
 import it.unisa.dia.gas.jpbc.Element;
+import it.unisa.dia.gas.plaf.jpbc.util.ElementUtils;
 
 public class FLTCCDMasterSecretKeyParameters extends FLTCCDKeyParameters {
-    private Element alpha;
+    private Element y;
+    private Element[] ts;
 
-    public FLTCCDMasterSecretKeyParameters(FLTCCDParameters parameters, Element alpha) {
-        super(true, parameters);
-        this.alpha = alpha.getImmutable();
+    public FLTCCDMasterSecretKeyParameters(FLTCCDParameters parameters, Element y, Element[] ts) {
+        super(false, parameters);
+        this.y = y.getImmutable();
+        this.ts = ElementUtils.cloneImmutable(ts);
     }
 
-    public Element getAlpha() {
-        return this.alpha;
+    public Element getY() {
+        return y;
+    }
+
+    public Element getTAt(int index) {
+        return this.ts[index];
     }
 }

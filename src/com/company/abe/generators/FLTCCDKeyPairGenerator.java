@@ -4,7 +4,6 @@ import com.company.abe.parameters.FLTCCDKeyPairGenerationParameters;
 import com.company.abe.parameters.FLTCCDMasterSecretKeyParameters;
 import com.company.abe.parameters.FLTCCDParameters;
 import com.company.abe.parameters.FLTCCDPublicKeyParameters;
-import it.unisa.dia.gas.crypto.jpbc.fe.abe.gghsw13.params.GGHSW13MasterSecretKeyParameters;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -22,17 +21,21 @@ public class FLTCCDKeyPairGenerator implements AsymmetricCipherKeyPairGenerator 
     @Override
     public AsymmetricCipherKeyPair generateKeyPair() {
         FLTCCDParameters parameters = this.parameters.getParameters();
-
         Pairing pairing = parameters.getPairing();
 
-        Element alpha = pairing.getZr().newRandomElement().getImmutable();
+        Element y = pairing.getZr().newElement().getImmutable();
         int n = parameters.getN();
-        Element[] hs = new Element[n];
+        Element[] ts = new Element[n];
 
-        for(int i = 0; i < hs.length; ++i) {
-            hs[i] = pairing.getFieldAt(1).newRandomElement().getImmutable();
+        for(int i = 0; i < ts.length; ++i) {
+            ts[i] = pairing.getFieldAt(1).newRandomElement().getImmutable();
         }
 
-        Element H = pairing.getFieldAt(pairing.getDegree()).newElement().powZn(alpha).getImmutable();
-        return new AsymmetricCipherKeyPair(new FLTCCDPublicKeyParameters(parameters, H, hs), new FLTCCDMasterSecretKeyParameters(parameters, alpha));    }
+        Element[] capitalTs = new Element[n];
+        for(int i = 0; i < ts.length; ++i) {
+            capitalTs[i] = pairing.getG1().newElement().powZn(ts[i]);
+        }
+        Element capitalY = pairing.getG2().newElement().powZn(y);
+
+        return new AsymmetricCipherKeyPair(new FLTCCDPublicKeyParameters(parameters, capitalY, capitalTs), new FLTCCDMasterSecretKeyParameters(parameters, y, ts));    }
 }
