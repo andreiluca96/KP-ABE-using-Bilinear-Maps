@@ -1,9 +1,10 @@
 package com.company.abe.generators;
 
 import com.company.abe.parameters.FLTCCDKeyPairGenerationParameters;
+import com.company.abe.parameters.FLTCCDMasterSecretKeyParameters;
 import com.company.abe.parameters.FLTCCDParameters;
+import com.company.abe.parameters.FLTCCDPublicKeyParameters;
 import it.unisa.dia.gas.crypto.jpbc.fe.abe.gghsw13.params.GGHSW13MasterSecretKeyParameters;
-import it.unisa.dia.gas.crypto.jpbc.fe.abe.gghsw13.params.GGHSW13PublicKeyParameters;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -33,5 +34,5 @@ public class FLTCCDKeyPairGenerator implements AsymmetricCipherKeyPairGenerator 
         }
 
         Element H = pairing.getFieldAt(pairing.getDegree()).newElement().powZn(alpha).getImmutable();
-        return new AsymmetricCipherKeyPair(new GGHSW13PublicKeyParameters(parameters, H, hs), new GGHSW13MasterSecretKeyParameters(parameters, alpha));    }
+        return new AsymmetricCipherKeyPair(new FLTCCDPublicKeyParameters(parameters, H, hs), new FLTCCDMasterSecretKeyParameters(parameters, alpha));    }
 }
