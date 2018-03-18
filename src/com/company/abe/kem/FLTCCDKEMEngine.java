@@ -7,6 +7,7 @@ import com.company.abe.parameters.FLTCCDSecretKeyParameters;
 import it.unisa.dia.gas.crypto.jpbc.fe.abe.gghsw13.params.GGHSW13SecretKeyParameters;
 import it.unisa.dia.gas.crypto.jpbc.kem.PairingKeyEncapsulationMechanism;
 import it.unisa.dia.gas.jpbc.Element;
+import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamReader;
 import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamWriter;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 
@@ -31,9 +32,11 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
     }
 
     @Override
-    public byte[] process(byte[] bytes, int inOff, int inLen) throws InvalidCipherTextException {
+    public byte[] process(byte[] bytes, int inOff, int inLen) {
         String assignment;
         if (this.key instanceof FLTCCDSecretKeyParameters) {
+            FLTCCDSecretKeyParameters sk = (FLTCCDSecretKeyParameters)this.key;
+
             return null;
         } else {
             FLTCCDEncryptionParameters encKey = (FLTCCDEncryptionParameters)this.key;

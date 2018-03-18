@@ -41,13 +41,13 @@ public class Main {
             KeyEncapsulationMechanism kem = new FLTCCDKEMEngine();
             kem.init(true, new FLTCCDEncryptionParameters((FLTCCDPublicKeyParameters) publicKey, w));
 
-            byte[] ciphertext = kem.process();
+            byte[] cipherText = kem.process();
 
-            assertNotNull(ciphertext);
-            assertNotSame(0, ciphertext.length);
+            assertNotNull(cipherText);
+            assertNotSame(0, cipherText.length);
 
-            byte[] key = Arrays.copyOfRange(ciphertext, 0, kem.getKeyBlockSize());
-            byte[] ct = Arrays.copyOfRange(ciphertext, kem.getKeyBlockSize(), ciphertext.length);
+            byte[] key = Arrays.copyOfRange(cipherText, 0, kem.getKeyBlockSize());
+            byte[] ct = Arrays.copyOfRange(cipherText, kem.getKeyBlockSize(), cipherText.length);
 
             return new byte[][]{key, ct};
         } catch (InvalidCipherTextException e) {
@@ -62,9 +62,7 @@ public class Main {
 
         Main main = new Main();
 
-
         AsymmetricCipherKeyPair keyPair = main.setup(n);
-
         String assignment = "1101";
         byte[][] ct = main.encaps(keyPair.getPublic(), assignment);
     }
