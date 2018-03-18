@@ -1,7 +1,5 @@
 package com.company.abe.circuit;
 
-import it.unisa.dia.gas.crypto.circuit.Circuit;
-
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -10,6 +8,20 @@ public class FLTCCDDefaultCircuit {
     private int q;
     private int depth;
     private FLTCCDDefaultGate[] gates;
+
+    public FLTCCDDefaultCircuit(int n, int q, int depth, FLTCCDDefaultGate[] gates) {
+        this.n = n;
+        this.q = q;
+        this.depth = depth;
+        this.gates = gates;
+        FLTCCDDefaultGate[] arr$ = gates;
+        int len$ = gates.length;
+
+        for(int i$ = 0; i$ < len$; ++i$) {
+            FLTCCDDefaultGate gate = arr$[i$];
+            gate.setCircuit(this);
+        }
+    }
 
     public int getN() {
         return n;

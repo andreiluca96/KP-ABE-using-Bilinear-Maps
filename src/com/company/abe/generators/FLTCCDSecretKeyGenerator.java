@@ -1,9 +1,9 @@
 package com.company.abe.generators;
 
+import com.company.abe.circuit.FLTCCDDefaultCircuit;
 import com.company.abe.parameters.FLTCCDMasterSecretKeyParameters;
 import com.company.abe.parameters.FLTCCDPublicKeyParameters;
 import com.company.abe.parameters.FLTCCDSecretKeyGenerationParameters;
-import it.unisa.dia.gas.crypto.circuit.Circuit;
 import it.unisa.dia.gas.jpbc.Pairing;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.KeyGenerationParameters;
@@ -11,7 +11,7 @@ import org.bouncycastle.crypto.KeyGenerationParameters;
 public class FLTCCDSecretKeyGenerator {
     private FLTCCDSecretKeyGenerationParameters params;
     private Pairing pairing;
-    private Circuit circuit;
+    private FLTCCDDefaultCircuit circuit;
 
     public FLTCCDSecretKeyGenerator() {
     }
@@ -26,7 +26,8 @@ public class FLTCCDSecretKeyGenerator {
         FLTCCDMasterSecretKeyParameters msk = this.params.getMasterSecretKeyParameters();
         FLTCCDPublicKeyParameters pp = this.params.getPublicKeyParameters();
 
-        Circuit circuit = this.circuit;
+        FLTCCDDefaultCircuit circuit = this.circuit;
+
 
         return null;
     }

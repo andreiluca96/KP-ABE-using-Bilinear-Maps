@@ -1,14 +1,14 @@
 package com.company.abe.parameters;
 
-import it.unisa.dia.gas.crypto.circuit.Circuit;
+import com.company.abe.circuit.FLTCCDDefaultCircuit;
 import org.bouncycastle.crypto.KeyGenerationParameters;
 
 public class FLTCCDSecretKeyGenerationParameters extends KeyGenerationParameters{
     private FLTCCDPublicKeyParameters publicKeyParameters;
     private FLTCCDMasterSecretKeyParameters masterSecretKeyParameters;
-    private Circuit circuit;
+    private FLTCCDDefaultCircuit circuit;
 
-    public FLTCCDSecretKeyGenerationParameters(FLTCCDPublicKeyParameters publicKeyParameters, FLTCCDMasterSecretKeyParameters masterSecretKeyParameters, Circuit circuit) {
+    public FLTCCDSecretKeyGenerationParameters(FLTCCDPublicKeyParameters publicKeyParameters, FLTCCDMasterSecretKeyParameters masterSecretKeyParameters, FLTCCDDefaultCircuit circuit) {
         super(null, 0);
         this.publicKeyParameters = publicKeyParameters;
         this.masterSecretKeyParameters = masterSecretKeyParameters;
@@ -23,7 +23,7 @@ public class FLTCCDSecretKeyGenerationParameters extends KeyGenerationParameters
         return this.masterSecretKeyParameters;
     }
 
-    public Circuit getCircuit() {
+    public FLTCCDDefaultCircuit getCircuit() {
         return this.circuit;
     }
 }
