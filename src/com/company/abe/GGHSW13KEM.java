@@ -115,10 +115,5 @@ public class GGHSW13KEM {
         String assignment = "1101";
         byte[][] ct = kem.encaps(keyPair.getPublic(), assignment);
         assertEquals(true, Arrays.equals(ct[0], kem.decaps(secretKey, ct[1])));
-
-        // Encaps/Decaps for not-satisfying assignment
-        assignment = "1001";
-        ct = kem.encaps(keyPair.getPublic(), assignment);
-        assertEquals(false, Arrays.equals(ct[0], kem.decaps(secretKey, ct[1])));
     }
 }

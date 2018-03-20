@@ -73,12 +73,6 @@ public class Main {
         int n = 4;
         int q = 5;
 
-        Main main = new Main();
-
-        AsymmetricCipherKeyPair keyPair = main.setup(n);
-        String assignment = "1101";
-        byte[][] ct = main.encaps(keyPair.getPublic(), assignment);
-
         FLTCCDDefaultCircuit circuit = new FLTCCDDefaultCircuit(n, q, 3, new FLTCCDDefaultGate[]{
                 new FLTCCDDefaultGate(INPUT, 0, 1),
                 new FLTCCDDefaultGate(INPUT, 1, 1),
@@ -92,6 +86,19 @@ public class Main {
                 new FLTCCDDefaultGate(OR, 8, 3, new int[]{6, 7})
         });
 
+        Main main = new Main();
+
+        // Setup phase
+        AsymmetricCipherKeyPair keyPair = main.setup(n);
+        String assignment = "1101";
+
+        // Encryption phase
+        byte[][] ct = main.encaps(keyPair.getPublic(), assignment);
+
+        // Key Generation phase
+        CipherParameters secretKey = main.keyGen(keyPair.getPublic(), keyPair.getPrivate(), circuit);
+
+        // Decryption phase
 
     }
 }

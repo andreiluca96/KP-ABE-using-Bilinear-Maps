@@ -1,32 +1,34 @@
 package com.company.abe.parameters;
 
-import it.unisa.dia.gas.crypto.circuit.Circuit;
+import com.company.abe.circuit.FLTCCDDefaultCircuit;
 import it.unisa.dia.gas.jpbc.Element;
 
+import java.util.List;
 import java.util.Map;
 
 public class FLTCCDSecretKeyParameters extends FLTCCDKeyParameters {
-    private Circuit circuit;
-    private Map<Integer, Element[]> s;
-    private Map<Integer, Element[]> p;
+    private FLTCCDDefaultCircuit circuit;
+    private Map<Integer, List<Element[]>> s;
+    private Map<Integer, List<Element[]>> p;
 
-    public FLTCCDSecretKeyParameters(boolean isPrivate, FLTCCDParameters parameters, Circuit circuit, Map<Integer, Element[]> s, Map<Integer, Element[]> p) {
-        super(isPrivate, parameters);
+    public FLTCCDSecretKeyParameters(FLTCCDParameters parameters, FLTCCDDefaultCircuit circuit,
+                                     Map<Integer, List<Element[]>> s,
+                                     Map<Integer, List<Element[]>> p) {
+        super(true, parameters);
 
         this.circuit = circuit;
         this.s = s;
         this.p = p;
     }
 
-    public Circuit getCircuit() {
+    public FLTCCDDefaultCircuit getCircuit() {
         return circuit;
     }
 
-    public Element[] getSElementsAt(int index) {
+    public List<Element[]> getSElementsAt(int index) {
         return this.s.get(index);
     }
-    public Element[] getPElementsAt(int index) {
+    public List<Element[]> getPElementsAt(int index) {
         return this.p.get(index);
     }
-
 }

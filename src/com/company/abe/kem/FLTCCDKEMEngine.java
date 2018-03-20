@@ -7,9 +7,7 @@ import com.company.abe.parameters.FLTCCDSecretKeyParameters;
 import it.unisa.dia.gas.crypto.jpbc.fe.abe.gghsw13.params.GGHSW13SecretKeyParameters;
 import it.unisa.dia.gas.crypto.jpbc.kem.PairingKeyEncapsulationMechanism;
 import it.unisa.dia.gas.jpbc.Element;
-import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamReader;
 import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamWriter;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 
 import java.io.IOException;
 

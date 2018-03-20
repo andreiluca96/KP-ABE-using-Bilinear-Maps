@@ -97,6 +97,10 @@ public class FLTCCDDefaultCircuit {
             return this.value;
         }
 
+        public int getInputSize() {
+            return this.inputs.length;
+        }
+
         public FLTCCDDefaultGate evaluate() {
             switch(this.type) {
                 case AND:
