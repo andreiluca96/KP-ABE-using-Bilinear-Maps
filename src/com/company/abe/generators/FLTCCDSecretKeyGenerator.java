@@ -5,7 +5,7 @@ import com.company.abe.parameters.FLTCCDMasterSecretKeyParameters;
 import com.company.abe.parameters.FLTCCDPublicKeyParameters;
 import com.company.abe.parameters.FLTCCDSecretKeyGenerationParameters;
 import com.company.abe.parameters.FLTCCDSecretKeyParameters;
-import it.unisa.dia.gas.jpbc.Element;
+    import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.KeyGenerationParameters;
@@ -106,6 +106,19 @@ public class FLTCCDSecretKeyGenerator {
                     break;
                 }
                 case INPUT: {
+                    elements = newArrayList();
+
+                    for (FLTCCDDefaultGate inputInputGate : topDownGates) {
+                        for (int i = 0; i < inputInputGate.getInputSize(); i++) {
+                            if (inputInputGate.getInputAt(i).getIndex() == gate.getIndex()) {
+                                elements.add(s.get(inputInputGate.getIndex()).get(i));
+                                break;
+                            }
+                        }
+                    }
+
+                    s.put(gate.getIndex(), elements);
+
                     break;
                 }
                 default: break;
