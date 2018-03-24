@@ -5,7 +5,6 @@ import com.company.abe.parameters.FLTCCDMasterSecretKeyParameters;
 import com.company.abe.parameters.FLTCCDPublicKeyParameters;
 import com.company.abe.parameters.FLTCCDSecretKeyGenerationParameters;
 import com.company.abe.parameters.FLTCCDSecretKeyParameters;
-import com.google.common.collect.Lists;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import org.bouncycastle.crypto.CipherParameters;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.company.abe.circuit.FLTCCDDefaultCircuit.*;
+import static com.google.common.collect.Lists.*;
 
 public class FLTCCDSecretKeyGenerator {
     private FLTCCDSecretKeyGenerationParameters params;
@@ -39,14 +39,16 @@ public class FLTCCDSecretKeyGenerator {
 
         // create S mapping
         final Map<Integer, List<List<Element>>> s = new HashMap<>();
+        final Map<Integer, List<Element>> p = new HashMap<>();
+
 
         // Put y to the output gate for the S mapping
-        List<List<Element>> elements = Lists.newArrayList();
-        elements.add(Lists.newArrayList(params.getMasterSecretKeyParameters().getY()));
+        List<List<Element>> elements = newArrayList();
+        elements.add(newArrayList(params.getMasterSecretKeyParameters().getY()));
         s.put(circuit.getOutputGate().getIndex(), elements);
 
         // Parse the gates in top-down order
-        List<FLTCCDDefaultGate> topDownGates = Lists.reverse(Lists.newArrayList(circuit.iterator()));
+        List<FLTCCDDefaultGate> topDownGates = reverse(newArrayList(circuit.iterator()));
         for (FLTCCDDefaultGate gate : topDownGates) {
             switch (gate.getType()) {
                 case OR: {
@@ -56,9 +58,9 @@ public class FLTCCDSecretKeyGenerator {
                     break;
                 }
                 case AND: {
-                    elements = Lists.newArrayList();
-                    elements.add(Lists.newArrayList());
-                    elements.add(Lists.newArrayList());
+                    elements = newArrayList();
+                    elements.add(newArrayList());
+                    elements.add(newArrayList());
 
                     for (int j = 0; j < s.get(gate.getIndex()).size(); j++) {
                         Element x1 = pairing.getG1()
@@ -76,6 +78,31 @@ public class FLTCCDSecretKeyGenerator {
                     break;
                 }
                 case FO: {
+                    elements = newArrayList();
+                    elements.add(newArrayList());
+
+                    List<Element> pElements = newArrayList();
+
+                    for (FLTCCDDefaultGate foInputGate : topDownGates) {
+                        for (int i = 0; i < foInputGate.getInputSize(); i++) {
+                            if (foInputGate.getInputAt(i).getIndex() == gate.getIndex()) {
+                                for (int j = 0; j < s.get(foInputGate.getIndex()).get(i).size(); j++) {
+                                    Element x1 = pairing.getG1()
+                                            .newRandomElement();
+                                    Element x2 = x1.duplicate()
+                                            .negate()
+                                            .add(s.get(foInputGate.getIndex()).get(i).get(j));
+
+                                    elements.get(0).add(x1);
+                                    pElements.add(pairing.getG1().newOneElement().powZn(x2));
+                                }
+                            }
+                        }
+                    }
+
+                    s.put(gate.getIndex(), elements);
+                    p.put(gate.getIndex(), pElements);
+
                     break;
                 }
                 case INPUT: {
@@ -85,7 +112,6 @@ public class FLTCCDSecretKeyGenerator {
             }
         }
 
-        final Map<Integer, List<List<Element>>> p = new HashMap<>();
 
 
 
