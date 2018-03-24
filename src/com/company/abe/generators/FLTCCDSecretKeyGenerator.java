@@ -38,13 +38,14 @@ public class FLTCCDSecretKeyGenerator {
         FLTCCDDefaultCircuit circuit = this.circuit;
 
         // create S mapping
-        final Map<Integer, List<Element[]>> s = new HashMap<>();
+        final Map<Integer, List<List<Element>>> s = new HashMap<>();
 
         // Put y to the output gate for the S mapping
-        List<Element[]> elements = Lists.newArrayList();
-        elements.add(new Element[]{params.getMasterSecretKeyParameters().getY()});
+        List<List<Element>> elements = Lists.newArrayList();
+        elements.add(Lists.newArrayList(params.getMasterSecretKeyParameters().getY()));
         s.put(circuit.getOutputGate().getIndex(), elements);
 
+        // Parse the gates in top-down order
         List<FLTCCDDefaultGate> topDownGates = Lists.reverse(Lists.newArrayList(circuit.iterator()));
         for (FLTCCDDefaultGate gate : topDownGates) {
             switch (gate.getType()) {
@@ -55,6 +56,22 @@ public class FLTCCDSecretKeyGenerator {
                     break;
                 }
                 case AND: {
+                    elements = Lists.newArrayList();
+                    elements.add(Lists.newArrayList());
+                    elements.add(Lists.newArrayList());
+
+                    for (int j = 0; j < s.get(gate.getIndex()).size(); j++) {
+                        Element x1 = pairing.getG1()
+                                .newRandomElement();
+                        Element x2 = x1.duplicate()
+                                .negate()
+                                .add(s.get(gate.getIndex()).get(0).get(j));
+
+                        elements.get(0).add(x1);
+                        elements.get(1).add(x2);
+                    }
+
+                    s.put(gate.getIndex(), elements);
 
                     break;
                 }
@@ -68,7 +85,7 @@ public class FLTCCDSecretKeyGenerator {
             }
         }
 
-        final Map<Integer, List<Element[]>> p = new HashMap<>();
+        final Map<Integer, List<List<Element>>> p = new HashMap<>();
 
 
 
