@@ -5,7 +5,8 @@ import com.company.abe.parameters.FLTCCDMasterSecretKeyParameters;
 import com.company.abe.parameters.FLTCCDPublicKeyParameters;
 import com.company.abe.parameters.FLTCCDSecretKeyGenerationParameters;
 import com.company.abe.parameters.FLTCCDSecretKeyParameters;
-    import it.unisa.dia.gas.jpbc.Element;
+import com.google.common.collect.Lists;
+import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.KeyGenerationParameters;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 import static com.company.abe.circuit.FLTCCDDefaultCircuit.*;
 import static com.google.common.collect.Lists.*;
+import static org.junit.Assert.assertEquals;
 
 public class FLTCCDSecretKeyGenerator {
     private FLTCCDSecretKeyGenerationParameters params;
@@ -125,9 +127,20 @@ public class FLTCCDSecretKeyGenerator {
             }
         }
 
+        List<List<Element>> d = Lists.newArrayList();
+        for (int i = 0; i < circuit.getN(); i++) {
+            assertEquals(s.get(i).size(), 1);
+            d.add(Lists.newArrayList());
+            for (int j = 0; j < s.get(i).get(0).size(); j++) {
+                Element dElement = pairing.getG1()
+                        .newOneElement()
+                        .powZn(s.get(i).get(0).get(j))
+                        .powZn(params.getPublicKeyParameters().getCapitalTAt(i));
 
+                d.get(i).add(dElement);
+            }
+        }
 
-
-        return new FLTCCDSecretKeyParameters(this.params.getPublicKeyParameters().getParameters(), circuit, s, p);
+        return new FLTCCDSecretKeyParameters(this.params.getPublicKeyParameters().getParameters(), circuit, d, p);
     }
 }
