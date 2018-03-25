@@ -18,9 +18,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 import static com.company.abe.circuit.FLTCCDDefaultCircuit.FLTCCDGateType.*;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class Main {
 
@@ -69,6 +67,25 @@ public class Main {
         return keyGen.generateKey();
     }
 
+    public byte[] decaps(CipherParameters secretKey, byte[] ciphertext, String w) {
+        try {
+            KeyEncapsulationMechanism kem = new FLTCCDKEMEngine();
+
+            kem.init(false, new FLTCCDDecryptionParameters((FLTCCDSecretKeyParameters) secretKey, w));
+            byte[] key = kem.processBlock(ciphertext);
+
+            assertNotNull(key);
+            assertNotSame(0, key.length);
+
+            return key;
+        } catch (InvalidCipherTextException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+
+        return null;
+    }
+
     public static void main(String[] args) {
         int n = 4;
         int q = 5;
@@ -99,6 +116,6 @@ public class Main {
         CipherParameters secretKey = main.keyGen(keyPair.getPublic(), keyPair.getPrivate(), circuit);
 
         // Decryption phase
-
+        assertEquals(true, Arrays.equals(ct[0], main.decaps(secretKey, ct[1], assignment)));
     }
 }

@@ -1,6 +1,6 @@
 package com.company.abe.parameters;
 
-public class FLTCCDEncryptionParameters extends FLTCCDKeyParameters{
+public class FLTCCDEncryptionParameters extends FLTCCDKeyParameters {
     private FLTCCDPublicKeyParameters publicKey;
     private String assignment;
 

@@ -35,6 +35,8 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
         if (this.key instanceof FLTCCDSecretKeyParameters) {
             FLTCCDSecretKeyParameters sk = (FLTCCDSecretKeyParameters)this.key;
 
+
+
             return null;
         } else {
             FLTCCDEncryptionParameters encKey = (FLTCCDEncryptionParameters)this.key;
