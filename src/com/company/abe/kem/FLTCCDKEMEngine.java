@@ -1,15 +1,12 @@
 package com.company.abe.kem;
 
-import com.company.abe.parameters.FLTCCDEncryptionParameters;
-import com.company.abe.parameters.FLTCCDKeyParameters;
-import com.company.abe.parameters.FLTCCDPublicKeyParameters;
-import com.company.abe.parameters.FLTCCDSecretKeyParameters;
-import it.unisa.dia.gas.crypto.jpbc.fe.abe.gghsw13.params.GGHSW13SecretKeyParameters;
+import com.company.abe.parameters.*;
 import it.unisa.dia.gas.crypto.jpbc.kem.PairingKeyEncapsulationMechanism;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamWriter;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
     public FLTCCDKEMEngine() {
@@ -20,7 +17,7 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
             if (!(this.key instanceof FLTCCDEncryptionParameters)) {
                 throw new IllegalArgumentException("FLTCCDEncryptionParameters are required for encryption.");
             }
-        } else if (!(this.key instanceof GGHSW13SecretKeyParameters)) {
+        } else if (!(this.key instanceof FLTCCDDecryptionParameters)) {
             throw new IllegalArgumentException("GGHSW13SecretKeyParameters are required for decryption.");
         }
 
@@ -32,11 +29,18 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
     @Override
     public byte[] process(byte[] bytes, int inOff, int inLen) {
         String assignment;
-        if (this.key instanceof FLTCCDSecretKeyParameters) {
-            FLTCCDSecretKeyParameters sk = (FLTCCDSecretKeyParameters)this.key;
+        if (this.key instanceof FLTCCDDecryptionParameters) {
+            FLTCCDDecryptionParameters decKey = (FLTCCDDecryptionParameters) this.key;
+            FLTCCDSecretKeyParameters sk = (FLTCCDSecretKeyParameters)decKey.getSecretKey();
+            assignment = decKey.getAssignment();
 
+            assert assignment.length() == sk.getCircuit().getN();
 
-
+            for (int i = 0; i < sk.getCircuit().getN(); i++) {
+//                sk.getParameters()
+//                        .getPairing()
+//                        .pairing()
+            }
             return null;
         } else {
             FLTCCDEncryptionParameters encKey = (FLTCCDEncryptionParameters)this.key;
@@ -47,8 +51,10 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
             try {
                 Element s = this.pairing.getZr().newRandomElement().getImmutable();
                 Element mask = publicKey.getY().powZn(s);
+
+                writer.write(ByteBuffer.allocate(4).putInt(mask.toCanonicalRepresentation().length).array());
                 writer.write(mask.toCanonicalRepresentation());
-                writer.write(assignment);
+
                 int n = publicKey.getParameters().getN();
 
                 for(int i = 0; i < n; ++i) {
