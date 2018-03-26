@@ -1,7 +1,9 @@
 package com.company.abe.kem;
 
+import com.company.abe.circuit.FLTCCDDefaultCircuit;
 import com.company.abe.parameters.*;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import it.unisa.dia.gas.crypto.jpbc.kem.PairingKeyEncapsulationMechanism;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamReader;
@@ -10,6 +12,11 @@ import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
+
+import static com.company.abe.circuit.FLTCCDDefaultCircuit.*;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.reverse;
 
 public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
     public FLTCCDKEMEngine() {
@@ -49,6 +56,8 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
                 }
             }
 
+            Element gs = reader.readG1Element();
+
             List<List<Element>> vA = Lists.newArrayList();
             for (int i = 0; i < sk.getCircuit().getN(); i++) {
                 if (assignment.charAt(i) == '1') {
@@ -75,7 +84,7 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
                 }
             }
 
-
+            Element key = reconstruct(decKey.getSecretKey().getCircuit(), decKey.getSecretKey(), vA, gs);
 
             return null;
         } else {
@@ -106,5 +115,70 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
 
             return writer.toBytes();
         }
+    }
+
+    private Element reconstruct(FLTCCDDefaultCircuit circuit, FLTCCDSecretKeyParameters secretKey, List<List<Element>> vA, Element gs) {
+        Map<Integer, List<List<Element>>> r = Maps.newHashMap();
+
+        List<FLTCCDDefaultGate> bottomUpGates = newArrayList(circuit.iterator());
+        for (FLTCCDDefaultGate gate : bottomUpGates) {
+            switch (gate.getType()) {
+                case OR: {
+                    List<List<Element>> elements = Lists.newArrayList();
+                    if (r.get(gate.getInputIndexAt(0)).get(0) == null) {
+                        r.put(gate.getIndex(), r.get(gate.getInputAt(1).getIndex()));
+                    }
+
+                    if (r.get(gate.getInputIndexAt(1)) == null) {
+                        r.put(gate.getIndex(), r.get(gate.getInputAt(0).getIndex()));
+                    }
+
+                    if (r.get(gate.getInputIndexAt(0)) == null && r.get(gate.getInputIndexAt(1)) == null) {
+                        r.put(gate.getIndex(), null);
+                    }
+
+                    for (int i = 0; i < r.get(gate.getInputIndexAt(0)).size(); i++) {
+                        if (r.get(gate.getInputIndexAt(0)).get(i) == null) {
+                            elements.add(r.get(gate.getInputAt(1).getIndex()).get(i));
+                        } else {
+                            if (r.get(gate.getInputIndexAt(1)).get(i) == null) {
+                                elements.add(r.get(gate.getInputAt(0).getIndex()).get(i));
+                            } else {
+                                elements.add(null);
+                            }
+                        }
+                    }
+
+                    r.put(gate.getIndex(), elements);
+
+                    break;
+                }
+                case AND: {
+
+                    break;
+                }
+                case FO: {
+
+                    break;
+                }
+                case INPUT: {
+                    List<List<Element>> elements = Lists.newArrayList();
+                    elements.add(Lists.newArrayList());
+
+                    for (int i = 0; i < vA.get(gate.getIndex()).size(); i++) {
+                        elements.get(0).addAll(vA.get(i));
+                    }
+
+                    r.put(gate.getIndex(), elements);
+
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+
+        return r.get(circuit.getOutputGate().getIndex()).get(0).get(0);
     }
 }
