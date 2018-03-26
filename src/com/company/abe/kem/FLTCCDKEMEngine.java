@@ -86,7 +86,7 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
 
             Element key = reconstruct(decKey.getSecretKey().getCircuit(), decKey.getSecretKey(), vA, gs);
 
-            return null;
+            return key.toBytes();
         } else {
             FLTCCDEncryptionParameters encKey = (FLTCCDEncryptionParameters)this.key;
             FLTCCDPublicKeyParameters publicKey = encKey.getPublicKey();
@@ -122,21 +122,9 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
 
         List<FLTCCDDefaultGate> bottomUpGates = newArrayList(circuit.iterator());
         for (FLTCCDDefaultGate gate : bottomUpGates) {
+            List<List<Element>> elements = Lists.newArrayList();
             switch (gate.getType()) {
                 case OR: {
-                    List<List<Element>> elements = Lists.newArrayList();
-                    if (r.get(gate.getInputIndexAt(0)).get(0) == null) {
-                        r.put(gate.getIndex(), r.get(gate.getInputAt(1).getIndex()));
-                    }
-
-                    if (r.get(gate.getInputIndexAt(1)) == null) {
-                        r.put(gate.getIndex(), r.get(gate.getInputAt(0).getIndex()));
-                    }
-
-                    if (r.get(gate.getInputIndexAt(0)) == null && r.get(gate.getInputIndexAt(1)) == null) {
-                        r.put(gate.getIndex(), null);
-                    }
-
                     for (int i = 0; i < r.get(gate.getInputIndexAt(0)).size(); i++) {
                         if (r.get(gate.getInputIndexAt(0)).get(i) == null) {
                             elements.add(r.get(gate.getInputAt(1).getIndex()).get(i));
@@ -154,6 +142,19 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
                     break;
                 }
                 case AND: {
+//                    for (int i = 0; i < r.get(gate.getInputIndexAt(0)).size(); i++) {
+//                        elements.add(r.get(gate.getInputAt(0).getIndex()).get(i));
+//
+//                        if (r.get(gate.getInputIndexAt(0)).get(i) == null) {
+//                            elements.add(r.get(gate.getInputAt(1).getIndex()).get(i));
+//                        } else {
+//                            if (r.get(gate.getInputIndexAt(1)).get(i) == null) {
+//                                elements.add(r.get(gate.getInputAt(0).getIndex()).get(i));
+//                            } else {
+//                                elements.add(null);
+//                            }
+//                        }
+//                    }
 
                     break;
                 }
@@ -162,7 +163,6 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
                     break;
                 }
                 case INPUT: {
-                    List<List<Element>> elements = Lists.newArrayList();
                     elements.add(Lists.newArrayList());
 
                     for (int i = 0; i < vA.get(gate.getIndex()).size(); i++) {
