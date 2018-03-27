@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.company.abe.circuit.FLTCCDDefaultCircuit.*;
+import static com.company.abe.circuit.FLTCCDDefaultCircuit.FLTCCDGateType.INPUT;
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Lists.reverse;
 
 public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
     public FLTCCDKEMEngine() {
@@ -123,6 +123,63 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
         List<FLTCCDDefaultGate> bottomUpGates = newArrayList(circuit.iterator());
         for (FLTCCDDefaultGate gate : bottomUpGates) {
             List<List<Element>> elements = Lists.newArrayList();
+            if (gate.getType() == INPUT) {
+                elements.add(Lists.newArrayList());
+
+                for (int i = 0; i < vA.get(gate.getIndex()).size(); i++) {
+                    elements.get(0).addAll(vA.get(i));
+                }
+
+                r.put(gate.getIndex(), elements);
+            } else {
+                if (gate.getIndex() == circuit.getOutputGate().getIndex()) {
+
+                } else {
+                    for (int i = 0; i < gate.getInputSize(); i++) {
+                        FLTCCDDefaultGate inputGate = gate.getInputAt(i);
+
+                        switch (gate.getType()) {
+                            case OR: {
+                                if (r.get(inputGate.getIndex()).get(0) == null) {
+                                    if (r.get(inputGate.getIndex()).get(1) == null) {
+                                        elements.add(null);
+                                    } else {
+                                        elements.add(r.get(inputGate.getIndex()).get(1));
+                                    }
+                                } else {
+                                    elements.add(r.get(inputGate.getIndex()).get(0));
+                                }
+
+                                break;
+                            }
+                            case AND: {
+                                List<Element> rIJ;
+                                if (r.get(inputGate.getIndex()).get(0) == null || r.get(inputGate.getIndex()).get(1) == null) {
+                                    rIJ = null;
+                                } else {
+                                    rIJ = Lists.newArrayList();
+                                    for (int j = 0; j < r.get(inputGate.getIndex()).get(0).size(); j++) {
+                                        Element element1 = r.get(inputGate.getIndex()).get(0).get(j);
+                                        Element element2 = r.get(inputGate.getIndex()).get(1).get(j);
+
+                                        rIJ.add(element1.mul(element2));
+                                    }
+                                }
+
+                                elements.add(rIJ);
+
+                                break;
+                            }
+                            case FO: {
+
+                                break;
+                            }
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
             switch (gate.getType()) {
                 case OR: {
                     for (int i = 0; i < r.get(gate.getInputIndexAt(0)).size(); i++) {
