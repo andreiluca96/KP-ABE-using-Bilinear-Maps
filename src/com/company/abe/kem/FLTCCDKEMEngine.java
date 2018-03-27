@@ -120,6 +120,8 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
     private Element reconstruct(FLTCCDDefaultCircuit circuit, FLTCCDSecretKeyParameters secretKey, List<List<Element>> vA, Element gs) {
         Map<Integer, List<List<Element>>> r = Maps.newHashMap();
 
+        Map<Integer, Integer> foGateCounterMapping = Maps.newHashMap();
+
         List<FLTCCDDefaultGate> bottomUpGates = newArrayList(circuit.iterator());
         for (FLTCCDDefaultGate gate : bottomUpGates) {
             List<List<Element>> elements = Lists.newArrayList();
@@ -171,6 +173,25 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
                                 break;
                             }
                             case FO: {
+                                int currentCounter = 0;
+                                if (foGateCounterMapping.containsKey(inputGate.getIndex())) {
+                                    currentCounter = foGateCounterMapping.get(inputGate.getIndex()) + 1;
+                                }
+                                foGateCounterMapping.put(inputGate.getIndex(), currentCounter);
+
+                                List<Element> rWK = Lists.newArrayList();
+                                if (Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter) == null) {
+                                    rWK = null;
+                                } else {
+                                    for (int j = 0; j < Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter).size(); j++) {
+                                        Element rkElement = Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter).get(j);
+                                        Element pairingElement = pairing.pairing(Lists.reverse(secretKey.getPElementsAt(inputGate.getIndex())).get(j), gs);
+
+                                        rWK.add(rkElement.mul(pairingElement));
+                                    }
+                                }
+
+                                elements.add(rWK);
 
                                 break;
                             }
@@ -179,59 +200,6 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
                         }
                     }
                 }
-            }
-            switch (gate.getType()) {
-                case OR: {
-                    for (int i = 0; i < r.get(gate.getInputIndexAt(0)).size(); i++) {
-                        if (r.get(gate.getInputIndexAt(0)).get(i) == null) {
-                            elements.add(r.get(gate.getInputAt(1).getIndex()).get(i));
-                        } else {
-                            if (r.get(gate.getInputIndexAt(1)).get(i) == null) {
-                                elements.add(r.get(gate.getInputAt(0).getIndex()).get(i));
-                            } else {
-                                elements.add(null);
-                            }
-                        }
-                    }
-
-                    r.put(gate.getIndex(), elements);
-
-                    break;
-                }
-                case AND: {
-//                    for (int i = 0; i < r.get(gate.getInputIndexAt(0)).size(); i++) {
-//                        elements.add(r.get(gate.getInputAt(0).getIndex()).get(i));
-//
-//                        if (r.get(gate.getInputIndexAt(0)).get(i) == null) {
-//                            elements.add(r.get(gate.getInputAt(1).getIndex()).get(i));
-//                        } else {
-//                            if (r.get(gate.getInputIndexAt(1)).get(i) == null) {
-//                                elements.add(r.get(gate.getInputAt(0).getIndex()).get(i));
-//                            } else {
-//                                elements.add(null);
-//                            }
-//                        }
-//                    }
-
-                    break;
-                }
-                case FO: {
-
-                    break;
-                }
-                case INPUT: {
-                    elements.add(Lists.newArrayList());
-
-                    for (int i = 0; i < vA.get(gate.getIndex()).size(); i++) {
-                        elements.get(0).addAll(vA.get(i));
-                    }
-
-                    r.put(gate.getIndex(), elements);
-
-                    break;
-                }
-                default:
-                    break;
             }
         }
 
