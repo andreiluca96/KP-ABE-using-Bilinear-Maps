@@ -134,76 +134,115 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
 
                 r.put(gate.getIndex(), elements);
             } else {
-                if (gate.getIndex() == circuit.getOutputGate().getIndex()) {
+                for (int i = 0; i < gate.getInputSize(); i++) {
+                    FLTCCDDefaultGate inputGate = gate.getInputAt(i);
 
-                } else {
-                    for (int i = 0; i < gate.getInputSize(); i++) {
-                        FLTCCDDefaultGate inputGate = gate.getInputAt(i);
-
-                        switch (gate.getType()) {
-                            case OR: {
-                                if (r.get(inputGate.getIndex()).get(0) == null) {
-                                    if (r.get(inputGate.getIndex()).get(1) == null) {
-                                        elements.add(null);
-                                    } else {
-                                        elements.add(r.get(inputGate.getIndex()).get(1));
-                                    }
+                    switch (inputGate.getType()) {
+                        case OR: {
+                            if (r.get(inputGate.getIndex()).get(0) == null) {
+                                if (r.get(inputGate.getIndex()).get(1) == null) {
+                                    elements.add(null);
                                 } else {
-                                    elements.add(r.get(inputGate.getIndex()).get(0));
+                                    elements.add(r.get(inputGate.getIndex()).get(1));
                                 }
-
-                                break;
+                            } else {
+                                elements.add(r.get(inputGate.getIndex()).get(0));
                             }
-                            case AND: {
-                                List<Element> rIJ;
-                                if (r.get(inputGate.getIndex()).get(0) == null || r.get(inputGate.getIndex()).get(1) == null) {
-                                    rIJ = null;
-                                } else {
-                                    rIJ = Lists.newArrayList();
-                                    for (int j = 0; j < r.get(inputGate.getIndex()).get(0).size(); j++) {
-                                        Element element1 = r.get(inputGate.getIndex()).get(0).get(j);
-                                        Element element2 = r.get(inputGate.getIndex()).get(1).get(j);
 
-                                        rIJ.add(element1.mul(element2));
-                                    }
-                                }
-
-                                elements.add(rIJ);
-
-                                break;
-                            }
-                            case FO: {
-                                int currentCounter = 0;
-                                if (foGateCounterMapping.containsKey(inputGate.getIndex())) {
-                                    currentCounter = foGateCounterMapping.get(inputGate.getIndex()) + 1;
-                                }
-                                foGateCounterMapping.put(inputGate.getIndex(), currentCounter);
-
-                                List<Element> rWK = Lists.newArrayList();
-                                if (Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter) == null) {
-                                    rWK = null;
-                                } else {
-                                    for (int j = 0; j < Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter).size(); j++) {
-                                        Element rkElement = Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter).get(j);
-                                        Element pairingElement = pairing.pairing(Lists.reverse(secretKey.getPElementsAt(inputGate.getIndex())).get(j), gs);
-
-                                        rWK.add(rkElement.mul(pairingElement));
-                                    }
-                                }
-
-                                elements.add(rWK);
-
-                                break;
-                            }
-                            default:
-                                break;
+                            break;
                         }
+                        case AND: {
+                            List<Element> rIJ;
+                            if (r.get(inputGate.getIndex()).get(0) == null || r.get(inputGate.getIndex()).get(1) == null) {
+                                rIJ = null;
+                            } else {
+                                rIJ = Lists.newArrayList();
+                                for (int j = 0; j < r.get(inputGate.getIndex()).get(0).size(); j++) {
+                                    Element element1 = r.get(inputGate.getIndex()).get(0).get(j);
+                                    Element element2 = r.get(inputGate.getIndex()).get(1).get(j);
+
+                                    rIJ.add(element1.mul(element2));
+                                }
+                            }
+
+                            elements.add(rIJ);
+
+                            break;
+                        }
+                        case FO: {
+                            int currentCounter = 0;
+                            if (foGateCounterMapping.containsKey(inputGate.getIndex())) {
+                                currentCounter = foGateCounterMapping.get(inputGate.getIndex()) + 1;
+                            }
+                            foGateCounterMapping.put(inputGate.getIndex(), currentCounter);
+
+                            List<Element> rWK = Lists.newArrayList();
+                            if (Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter) == null) {
+                                rWK = null;
+                            } else {
+                                for (int j = 0; j < Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter).size(); j++) {
+                                    Element rkElement = Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter).get(j);
+                                    Element pairingElement = pairing.pairing(Lists.reverse(secretKey.getPElementsAt(inputGate.getIndex())).get(j), gs);
+
+                                    rWK.add(rkElement.mul(pairingElement));
+                                }
+                            }
+
+                            elements.add(rWK);
+
+                            break;
+                        }
+                        default:
+                            break;
                     }
+                }
+
+                r.put(gate.getIndex(), elements);
+
+                elements = Lists.newArrayList();
+                if (gate.getIndex() == circuit.getOutputGate().getIndex()) {
+                    switch (gate.getType()) {
+                        case OR: {
+                            if (r.get(gate.getIndex()).get(0) == null) {
+                                if (r.get(gate.getIndex()).get(1) == null) {
+                                    elements.add(null);
+                                } else {
+                                    elements.add(r.get(gate.getIndex()).get(1));
+                                }
+                            } else {
+                                elements.add(r.get(gate.getIndex()).get(0));
+                            }
+
+                            break;
+                        }
+                        case AND: {
+                            List<Element> rIJ;
+                            if (r.get(gate.getIndex()).get(0) == null || r.get(gate.getIndex()).get(1) == null) {
+                                rIJ = null;
+                            } else {
+                                rIJ = Lists.newArrayList();
+                                for (int j = 0; j < r.get(gate.getIndex()).get(0).size(); j++) {
+                                    Element element1 = r.get(gate.getIndex()).get(0).get(j);
+                                    Element element2 = r.get(gate.getIndex()).get(1).get(j);
+
+                                    rIJ.add(element1.mul(element2));
+                                }
+                            }
+
+                            elements.add(rIJ);
+
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+
+                    r.put(circuit.getOutputGate().getIndex() + 1, elements);
                 }
             }
         }
 
 
-        return r.get(circuit.getOutputGate().getIndex()).get(0).get(0);
+        return r.get(circuit.getOutputGate().getIndex() + 1).get(0).get(0);
     }
 }
