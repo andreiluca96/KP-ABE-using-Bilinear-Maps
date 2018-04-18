@@ -52,14 +52,15 @@ public class Main {
 
             ByteBuffer wrapped = ByteBuffer.wrap(size);
 
-            byte[] secret = new byte[wrapped.getInt()];
-            for (int i = 0; i < wrapped.getInt(); i++) {
+            int secretSize = wrapped.getInt();
+            byte[] secret = new byte[secretSize];
+            for (int i = 0; i < secretSize; i++) {
                 secret[i] = result[i + 4];
             }
 
-            byte[] encryptionParams = new byte[result.length - wrapped.getInt() - 4];
-            for (int i = 0; i < result.length - wrapped.getInt() - 4; i++) {
-                encryptionParams[i] = result[i + wrapped.getInt() + 4];
+            byte[] encryptionParams = new byte[result.length - secretSize - 4];
+            for (int i = 0; i < result.length - secretSize - 4; i++) {
+                encryptionParams[i] = result[i + secretSize + 4];
             }
 
             return new byte[][]{secret, encryptionParams};

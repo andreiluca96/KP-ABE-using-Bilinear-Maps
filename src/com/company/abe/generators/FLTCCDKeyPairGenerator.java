@@ -25,17 +25,18 @@ public class FLTCCDKeyPairGenerator implements AsymmetricCipherKeyPairGenerator 
 
         Element y = pairing.getZr().newElement().getImmutable();
         int n = parameters.getN();
-        Element[] ts = new Element[n];
 
+        Element[] ts = new Element[n];
         for(int i = 0; i < ts.length; ++i) {
-            ts[i] = pairing.getFieldAt(1).newRandomElement().getImmutable();
+            ts[i] = pairing.getZr().newRandomElement();
         }
 
         Element[] capitalTs = new Element[n];
         for(int i = 0; i < ts.length; ++i) {
-            capitalTs[i] = pairing.getG1().newElement().powZn(ts[i]);
+            capitalTs[i] = pairing.getG1().newOneElement().powZn(ts[i]);
         }
-        Element capitalY = pairing.getG2().newElement().powZn(y);
+
+        Element capitalY = pairing.pairing(pairing.getG1().newOneElement(), pairing.getG2().newOneElement()).powZn(y);
 
         return new AsymmetricCipherKeyPair(new FLTCCDPublicKeyParameters(parameters, capitalY, capitalTs), new FLTCCDMasterSecretKeyParameters(parameters, y, ts));    }
 }

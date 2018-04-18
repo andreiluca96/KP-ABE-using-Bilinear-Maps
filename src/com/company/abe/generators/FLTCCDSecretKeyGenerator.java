@@ -64,12 +64,11 @@ public class FLTCCDSecretKeyGenerator {
                     elements.add(newArrayList());
                     elements.add(newArrayList());
 
-                    for (int j = 0; j < s.get(gate.getIndex()).size(); j++) {
-                        Element x1 = pairing.getG1()
+                    for (int j = 0; j < s.get(gate.getIndex()).get(0).size(); j++) {
+                        Element x1 = pairing.getZr()
                                 .newRandomElement();
-                        Element x2 = x1.duplicate()
-                                .negate()
-                                .add(s.get(gate.getIndex()).get(0).get(j));
+                        Element x2 = pairing.getZr()
+                                .newElement(x1.toBigInteger().negate().add(s.get(gate.getIndex()).get(0).get(j).toBigInteger()));
 
                         elements.get(0).add(x1);
                         elements.get(1).add(x2);
@@ -89,11 +88,10 @@ public class FLTCCDSecretKeyGenerator {
                         for (int i = 0; i < foInputGate.getInputSize(); i++) {
                             if (foInputGate.getInputAt(i).getIndex() == gate.getIndex()) {
                                 for (int j = 0; j < s.get(foInputGate.getIndex()).get(i).size(); j++) {
-                                    Element x1 = pairing.getG1()
+                                    Element x1 = pairing.getZr()
                                             .newRandomElement();
-                                    Element x2 = x1.duplicate()
-                                            .negate()
-                                            .add(s.get(foInputGate.getIndex()).get(i).get(j));
+                                    Element x2 = pairing.getZr()
+                                            .newElement(x1.toBigInteger().negate().add(s.get(foInputGate.getIndex()).get(i).get(j).toBigInteger()));
 
                                     elements.get(0).add(x1);
                                     pElements.add(pairing.getG1().newOneElement().powZn(x2));
