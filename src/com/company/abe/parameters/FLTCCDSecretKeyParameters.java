@@ -8,11 +8,11 @@ import java.util.Map;
 
 public class FLTCCDSecretKeyParameters extends FLTCCDKeyParameters {
     private FLTCCDDefaultCircuit circuit;
-    private List<List<Element>> d;
+    private Map<Integer, List<Element>> d;
     private Map<Integer, List<Element>> p;
 
     public FLTCCDSecretKeyParameters(FLTCCDParameters parameters, FLTCCDDefaultCircuit circuit,
-                                     List<List<Element>> d, Map<Integer, List<Element>> p) {
+                                     Map<Integer, List<Element>> d, Map<Integer, List<Element>> p) {
         super(true, parameters);
 
         this.circuit = circuit;
