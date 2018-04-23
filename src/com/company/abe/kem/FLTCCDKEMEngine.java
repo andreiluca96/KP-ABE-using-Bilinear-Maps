@@ -1,11 +1,12 @@
 package com.company.abe.kem;
 
 import com.company.abe.circuit.FLTCCDDefaultCircuit;
+import com.company.abe.kem.results.FLTCCDKEMEngineResult;
 import com.company.abe.parameters.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import it.unisa.dia.gas.crypto.jpbc.kem.PairingKeyEncapsulationMechanism;
 import it.unisa.dia.gas.jpbc.Element;
+import it.unisa.dia.gas.jpbc.Pairing;
 import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamReader;
 import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamWriter;
 import org.junit.Assert;
@@ -19,31 +20,31 @@ import static com.company.abe.circuit.FLTCCDDefaultCircuit.*;
 import static com.company.abe.circuit.FLTCCDDefaultCircuit.FLTCCDGateType.INPUT;
 import static com.google.common.collect.Lists.newArrayList;
 
-public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
-    public FLTCCDKEMEngine() {
-    }
+public class FLTCCDKEMEngine {
+    private boolean forEncryption;
+    private FLTCCDKeyParameters keyParameters;
+    private Pairing pairing;
 
-    public void initialize() {
+    public FLTCCDKEMEngine(boolean forEncryption, FLTCCDKeyParameters keyParameters) {
+        this.forEncryption = forEncryption;
+        this.keyParameters = keyParameters;
+
         if (this.forEncryption) {
-            if (!(this.key instanceof FLTCCDEncryptionParameters)) {
+            if (!(this.keyParameters instanceof FLTCCDEncryptionParameters)) {
                 throw new IllegalArgumentException("FLTCCDEncryptionParameters are required for encryption.");
             }
-        } else if (!(this.key instanceof FLTCCDDecryptionParameters)) {
+        } else if (!(this.keyParameters instanceof FLTCCDDecryptionParameters)) {
             throw new IllegalArgumentException("GGHSW13SecretKeyParameters are required for decryption.");
         }
 
-        FLTCCDKeyParameters keyParameters = (FLTCCDKeyParameters)this.key;
         this.pairing = keyParameters.getParameters().getPairing();
-        this.keyBytes = this.pairing.getFieldAt(this.pairing.getDegree()).getCanonicalRepresentationLengthInBytes();
     }
 
-    @Override
-    public byte[] process(byte[] in, int inOff, int inLen) {
+    public FLTCCDKEMEngineResult process() {
         String assignment;
-        if (this.key instanceof FLTCCDDecryptionParameters) {
+        if (this.keyParameters instanceof FLTCCDDecryptionParameters) {
             // decryption phase
-
-            FLTCCDDecryptionParameters decKey = (FLTCCDDecryptionParameters) this.key;
+            FLTCCDDecryptionParameters decKey = (FLTCCDDecryptionParameters) this.keyParameters;
             FLTCCDSecretKeyParameters sk = decKey.getSecretKey();
             assignment = decKey.getAssignment();
             PairingStreamReader reader = new PairingStreamReader(this.pairing, in, inOff);
@@ -91,8 +92,7 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
             return key.toBytes();
         } else {
             // encryption phase
-
-            FLTCCDEncryptionParameters encKey = (FLTCCDEncryptionParameters)this.key;
+            FLTCCDEncryptionParameters encKey = (FLTCCDEncryptionParameters)this.keyParameters;
             FLTCCDPublicKeyParameters publicKey = encKey.getPublicKey();
             assignment = encKey.getAssignment();
             PairingStreamWriter writer = new PairingStreamWriter(this.getOutputBlockSize());
@@ -123,8 +123,6 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
 
     private Element reconstruct(FLTCCDDefaultCircuit circuit, FLTCCDSecretKeyParameters secretKey, Map<Integer, List<Element>> vA, Element gs) {
         Map<Integer, List<Element>> r = Maps.newHashMap();
-
-        Map<Integer, Integer> foGateCounterMapping = Maps.newHashMap();
 
         List<FLTCCDDefaultGate> bottomUpGates = newArrayList(circuit.iterator());
         for (FLTCCDDefaultGate gate : bottomUpGates) {

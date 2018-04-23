@@ -40,8 +40,7 @@ public class Main {
 
     private byte[][] encaps(CipherParameters publicKey, String w) {
         try {
-            KeyEncapsulationMechanism kem = new FLTCCDKEMEngine();
-            kem.init(true, new FLTCCDEncryptionParameters((FLTCCDPublicKeyParameters) publicKey, w));
+            FLTCCDKEMEngine kem = new FLTCCDKEMEngine(true, new FLTCCDEncryptionParameters((FLTCCDPublicKeyParameters) publicKey, w));
 
             byte[] result = kem.process();
             byte[] size = new byte[4];
