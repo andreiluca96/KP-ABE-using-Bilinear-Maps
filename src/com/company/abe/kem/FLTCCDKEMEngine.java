@@ -8,6 +8,7 @@ import it.unisa.dia.gas.crypto.jpbc.kem.PairingKeyEncapsulationMechanism;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamReader;
 import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamWriter;
+import org.junit.Assert;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -137,6 +138,83 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
                     }
                 }
             } else {
+                switch (gate.getType()) {
+                    case OR: {
+                        int outputGateIndex = -1;
+                        for (FLTCCDDefaultGate outputGate : bottomUpGates) {
+                            for (int i = 0; i < outputGate.getInputSize(); i++) {
+                                if (outputGate.getInputIndexAt(i) == gate.getIndex()) {
+                                    outputGateIndex = outputGate.getIndex();
+                                }
+                            }
+                        }
+
+                        Assert.assertEquals(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).size(),
+                                r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).size());
+                        List<Element> elements = Lists.newArrayList();
+                        for (int i = 0; i < r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).size(); i++) {
+                            if (r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).get(i) == null) {
+                                if (r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).get(i) == null) {
+                                    elements.add(null);
+                                } else {
+                                    elements.add(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).get(i));
+                                }
+                            } else {
+                                Assert.assertEquals(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).get(i),
+                                        r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).get(i));
+                                elements.add(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).get(i));
+                            }
+                        }
+
+                        r.put(circuit.getWireIndex(gate.getIndex(), outputGateIndex), elements);
+
+                        break;
+                    }
+                    case AND: {
+                        List<Element> rIJ;
+                        if (r.get(inputGate.getIndex()).get(0) == null || r.get(inputGate.getIndex()).get(1) == null) {
+                            rIJ = null;
+                        } else {
+                            rIJ = Lists.newArrayList();
+                            for (int j = 0; j < r.get(inputGate.getIndex()).get(0).size(); j++) {
+                                Element element1 = r.get(inputGate.getIndex()).get(0).get(j);
+                                Element element2 = r.get(inputGate.getIndex()).get(1).get(j);
+
+                                rIJ.add(element1.mul(element2));
+                            }
+                        }
+
+                        elements.add(rIJ);
+
+                        break;
+                    }
+                    case FO: {
+                        int currentCounter = 0;
+                        if (foGateCounterMapping.containsKey(inputGate.getIndex())) {
+                            currentCounter = foGateCounterMapping.get(inputGate.getIndex()) + 1;
+                        }
+                        foGateCounterMapping.put(inputGate.getIndex(), currentCounter);
+
+                        List<Element> rWK = Lists.newArrayList();
+                        if (Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter) == null) {
+                            rWK = null;
+                        } else {
+                            for (int j = 0; j < Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter).size(); j++) {
+                                Element rkElement = Lists.reverse(r.get(inputGate.getIndex())).get(currentCounter).get(j);
+                                Element pairingElement = pairing.pairing(Lists.reverse(secretKey.getPElementsAt(inputGate.getIndex())).get(j), gs);
+
+                                rWK.add(rkElement.mul(pairingElement));
+                            }
+                        }
+
+                        elements.add(rWK);
+
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
                 List<List<Element>> elements = Lists.newArrayList();
                 for (int i = 0; i < gate.getInputSize(); i++) {
                     FLTCCDDefaultGate inputGate = gate.getInputAt(i);
