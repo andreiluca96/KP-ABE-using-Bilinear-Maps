@@ -40,6 +40,8 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
     public byte[] process(byte[] in, int inOff, int inLen) {
         String assignment;
         if (this.key instanceof FLTCCDDecryptionParameters) {
+            // decryption phase
+
             FLTCCDDecryptionParameters decKey = (FLTCCDDecryptionParameters) this.key;
             FLTCCDSecretKeyParameters sk = decKey.getSecretKey();
             assignment = decKey.getAssignment();
@@ -58,12 +60,11 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
 
             Element gs = reader.readG1Element();
 
-            List<List<Element>> vA = Lists.newArrayList();
+            Map<Integer, List<Element>> vA = Maps.newHashMap();
             for (int i = 0; i < sk.getCircuit().getN(); i++) {
                 if (assignment.charAt(i) == '1') {
-                    vA.add(Lists.newArrayList());
+                    vA.put(i, Lists.newArrayList());
                 } else {
-                    vA.add(null);
                     continue;
                 }
 
@@ -88,6 +89,8 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
 
             return key.toBytes();
         } else {
+            // encryption phase
+
             FLTCCDEncryptionParameters encKey = (FLTCCDEncryptionParameters)this.key;
             FLTCCDPublicKeyParameters publicKey = encKey.getPublicKey();
             assignment = encKey.getAssignment();
@@ -117,23 +120,24 @@ public class FLTCCDKEMEngine extends PairingKeyEncapsulationMechanism {
         }
     }
 
-    private Element reconstruct(FLTCCDDefaultCircuit circuit, FLTCCDSecretKeyParameters secretKey, List<List<Element>> vA, Element gs) {
-        Map<Integer, List<List<Element>>> r = Maps.newHashMap();
+    private Element reconstruct(FLTCCDDefaultCircuit circuit, FLTCCDSecretKeyParameters secretKey, Map<Integer, List<Element>> vA, Element gs) {
+        Map<Integer, List<Element>> r = Maps.newHashMap();
 
         Map<Integer, Integer> foGateCounterMapping = Maps.newHashMap();
 
         List<FLTCCDDefaultGate> bottomUpGates = newArrayList(circuit.iterator());
         for (FLTCCDDefaultGate gate : bottomUpGates) {
-            List<List<Element>> elements = Lists.newArrayList();
             if (gate.getType() == INPUT) {
-                elements.add(Lists.newArrayList());
-
-                for (int i = 0; i < vA.get(gate.getIndex()).size(); i++) {
-                    elements.get(0).addAll(vA.get(i));
+                // assign to each wire that connects to an input gate the vA value.
+                for (FLTCCDDefaultGate outputGate : bottomUpGates) {
+                    for (int i = 0; i < outputGate.getInputSize(); i++) {
+                        if (outputGate.getInputIndexAt(i) == gate.getIndex()) {
+                            r.put(circuit.getWireIndex(gate.getIndex(), outputGate.getIndex()), vA.get(gate.getIndex()));
+                        }
+                    }
                 }
-
-                r.put(gate.getIndex(), elements);
             } else {
+                List<List<Element>> elements = Lists.newArrayList();
                 for (int i = 0; i < gate.getInputSize(); i++) {
                     FLTCCDDefaultGate inputGate = gate.getInputAt(i);
 
