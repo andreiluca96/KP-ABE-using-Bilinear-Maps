@@ -35,9 +35,12 @@ public class FLTCCDDefaultCircuit {
 
         int currentIndex = 0;
         for (FLTCCDDefaultGate gate : reversedGates) {
-            for (FLTCCDDefaultGate inputGate : reversedGates) {
+            if (gate.getType() == FLTCCDGateType.INPUT) {
+                continue;
+            }
+            for (int i = 0; i < gate.getInputSize(); i++) {
                 FLTCCDCircuitWire circuitWire = new FLTCCDCircuitWire();
-                circuitWire.setInputGateIndex(inputGate.getIndex());
+                circuitWire.setInputGateIndex(gate.getInputIndexAt(i));
                 circuitWire.setOutputGateIndex(gate.getIndex());
 
                 wireIndexMapping.put(circuitWire, currentIndex);
@@ -160,27 +163,6 @@ public class FLTCCDDefaultCircuit {
 
         protected void setCircuit(FLTCCDDefaultCircuit circuit) {
             this.circuit = circuit;
-        }
-    }
-
-    public class FLTCCDCircuitWire {
-        private int inputGateIndex;
-        private int outputGateIndex;
-
-        public int getInputGateIndex() {
-            return inputGateIndex;
-        }
-
-        public void setInputGateIndex(int inputGateIndex) {
-            this.inputGateIndex = inputGateIndex;
-        }
-
-        public int getOutputGateIndex() {
-            return outputGateIndex;
-        }
-
-        public void setOutputGateIndex(int outputGateIndex) {
-            this.outputGateIndex = outputGateIndex;
         }
     }
 

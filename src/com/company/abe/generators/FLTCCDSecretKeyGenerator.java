@@ -136,6 +136,9 @@ public class FLTCCDSecretKeyGenerator {
             elements = Lists.newArrayList(y);
         } else {
             for (FLTCCDDefaultGate outputGate : topDownGates) {
+                if (outputGate.getType() == FLTCCDGateType.INPUT) {
+                    continue;
+                }
                 for (int i = 0; i < outputGate.getInputSize(); i++) {
                     if (outputGate.getInputIndexAt(i) == gate.getIndex()) {
                         elements = s.get(this.circuit.getWireIndex(gate.getIndex(), outputGate.getIndex()));
@@ -154,6 +157,9 @@ public class FLTCCDSecretKeyGenerator {
             Assert.fail();
         } else {
             for (FLTCCDDefaultGate outputGate : topDownGates) {
+                if (outputGate.getType() == FLTCCDGateType.INPUT) {
+                    continue;
+                }
                 for (int i = 0; i < outputGate.getInputSize(); i++) {
                     if (outputGate.getInputIndexAt(i) == gate.getIndex()) {
                         elements.put(this.circuit.getWireIndex(gate.getIndex(), outputGate.getIndex()), s.get(this.circuit.getWireIndex(gate.getIndex(), outputGate.getIndex())));
