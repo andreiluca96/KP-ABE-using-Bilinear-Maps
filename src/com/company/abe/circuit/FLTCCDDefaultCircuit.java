@@ -1,13 +1,20 @@
 package com.company.abe.circuit;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class FLTCCDDefaultCircuit {
     private int n;
     private int q;
     private int depth;
     private FLTCCDDefaultGate[] gates;
+    private Map<FLTCCDCircuitWire, Integer> wireIndexMapping;
 
     public FLTCCDDefaultCircuit(int n, int q, int depth, FLTCCDDefaultGate[] gates) {
         this.n = n;
@@ -21,6 +28,37 @@ public class FLTCCDDefaultCircuit {
             FLTCCDDefaultGate gate = arr$[i$];
             gate.setCircuit(this);
         }
+
+        Arrays.sort(gates, Comparator.comparingInt(FLTCCDDefaultGate::getIndex));
+        List<FLTCCDDefaultGate> reversedGates = Lists.reverse(Lists.newArrayList(gates));
+        Map<FLTCCDCircuitWire, Integer> wireIndexMapping = Maps.newHashMap();
+
+        int currentIndex = 0;
+        for (FLTCCDDefaultGate gate : reversedGates) {
+            for (FLTCCDDefaultGate inputGate : reversedGates) {
+                FLTCCDCircuitWire circuitWire = new FLTCCDCircuitWire();
+                circuitWire.setInputGateIndex(inputGate.getIndex());
+                circuitWire.setOutputGateIndex(gate.getIndex());
+
+                wireIndexMapping.put(circuitWire, currentIndex);
+
+                currentIndex++;
+            }
+        }
+
+        this.wireIndexMapping = wireIndexMapping;
+    }
+
+    public Integer getWireIndex(int inputGateIndex, int outputGateIndex) {
+        FLTCCDCircuitWire circuitWire = new FLTCCDCircuitWire();
+        circuitWire.setInputGateIndex(inputGateIndex);
+        circuitWire.setOutputGateIndex(outputGateIndex);
+
+        if (wireIndexMapping.containsKey(circuitWire)) {
+            return wireIndexMapping.get(circuitWire);
+        }
+
+        return null;
     }
 
     public int getN() {
@@ -122,6 +160,27 @@ public class FLTCCDDefaultCircuit {
 
         protected void setCircuit(FLTCCDDefaultCircuit circuit) {
             this.circuit = circuit;
+        }
+    }
+
+    public class FLTCCDCircuitWire {
+        private int inputGateIndex;
+        private int outputGateIndex;
+
+        public int getInputGateIndex() {
+            return inputGateIndex;
+        }
+
+        public void setInputGateIndex(int inputGateIndex) {
+            this.inputGateIndex = inputGateIndex;
+        }
+
+        public int getOutputGateIndex() {
+            return outputGateIndex;
+        }
+
+        public void setOutputGateIndex(int outputGateIndex) {
+            this.outputGateIndex = outputGateIndex;
         }
     }
 

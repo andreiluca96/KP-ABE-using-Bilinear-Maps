@@ -57,6 +57,7 @@ public class FLTCCDSecretKeyGenerator {
                     for (int i = 0; i < gate.getInputSize(); i++) {
                         s.put(gate.getInputIndexAt(i), s.get(gate.getIndex()));
                     }
+
                     break;
                 }
                 case AND: {
