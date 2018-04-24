@@ -97,7 +97,7 @@ public class FLTCCDSecretKeyGenerator {
                             pElements.add(pairing.getG1().newOneElement().powZn(x2));
                         }
 
-                        p.put(this.circuit.getWireIndex(gate.getIndex(), entry.getKey()), pElements);
+                        p.put(entry.getKey(), pElements);
                     }
 
                     s.put(this.circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex()), sElements);

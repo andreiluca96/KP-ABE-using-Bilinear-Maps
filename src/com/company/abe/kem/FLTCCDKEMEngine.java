@@ -66,6 +66,7 @@ public class FLTCCDKEMEngine {
                         elements.add(null);
                     }
                 }
+                vA.put(i, elements);
             }
 
             Element key = reconstruct(decKey.getSecretKey().getCircuit(), decKey.getSecretKey(), vA, decKey.getSecretKey().getEncryptionResult().getGs());
@@ -108,6 +109,9 @@ public class FLTCCDKEMEngine {
             if (gate.getType() == INPUT) {
                 // assign to each wire that connects to an input gate the vA value.
                 for (FLTCCDDefaultGate outputGate : bottomUpGates) {
+                    if (outputGate.getType() == INPUT) {
+                        continue;
+                    }
                     for (int i = 0; i < outputGate.getInputSize(); i++) {
                         if (outputGate.getInputIndexAt(i) == gate.getIndex()) {
                             r.put(circuit.getWireIndex(gate.getIndex(), outputGate.getIndex()), vA.get(gate.getIndex()));
@@ -170,22 +174,22 @@ public class FLTCCDKEMEngine {
                         List<Integer> foGateIndexes = getFOGateIndexes(bottomUpGates, gate);
 
                         // splitting
-                        Map<Integer, List<Element>> splittedRs = Maps.newHashMap();
+                        Map<Integer, List<Element>> splittRs = Maps.newHashMap();
                         List<Element> gateRs = r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex()));
                         for (int i = 0; i < foGateIndexes.size(); i++) {
                             int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndexes.get(i));
                             int listSize = secretKey.getPElementsAt(wireIndex).size();
 
-                            splittedRs.put(wireIndex, gateRs.subList(0, listSize));
-                            gateRs.subList(listSize, gateRs.size());
+                            splittRs.put(wireIndex, gateRs.subList(0, listSize));
+                            gateRs = gateRs.subList(listSize, gateRs.size());
                         }
 
                         for (int i = 0; i < foGateIndexes.size(); i++) {
                             int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndexes.get(i));
 
                             List<Element> elements = Lists.newArrayList();
-                            for (int j = 0; j < splittedRs.get(wireIndex).size(); j++) {
-                                Element element = splittedRs.get(wireIndex).get(j).duplicate().mul(pairing.pairing(secretKey.getPElementsAt(wireIndex).get(j), gs));
+                            for (int j = 0; j < splittRs.get(wireIndex).size(); j++) {
+                                Element element = splittRs.get(wireIndex).get(j).duplicate().mul(pairing.pairing(secretKey.getPElementsAt(wireIndex).get(j), gs));
                                 elements.add(element);
                             }
                             r.put(circuit.getWireIndex(gate.getIndex(), wireIndex), elements);
@@ -206,6 +210,9 @@ public class FLTCCDKEMEngine {
     private int getOutputGateIndex(List<FLTCCDDefaultGate> bottomUpGates, FLTCCDDefaultGate gate) {
         int outputGateIndex = -1;
         for (FLTCCDDefaultGate outputGate : bottomUpGates) {
+            if (outputGate.getType() == INPUT) {
+                continue;
+            }
             for (int i = 0; i < outputGate.getInputSize(); i++) {
                 if (outputGate.getInputIndexAt(i) == gate.getIndex()) {
                     outputGateIndex = outputGate.getIndex();
@@ -221,6 +228,9 @@ public class FLTCCDKEMEngine {
     private List<Integer> getFOGateIndexes(List<FLTCCDDefaultGate> bottomUpGates, FLTCCDDefaultGate gate) {
         List<Integer> foGateIndexes = Lists.newArrayList();
         for (FLTCCDDefaultGate outputGate : Lists.reverse(bottomUpGates)) {
+            if (outputGate.getType() == INPUT) {
+                continue;
+            }
             for (int i = 0; i < outputGate.getInputSize(); i++) {
                 if (outputGate.getInputIndexAt(i) == gate.getIndex()) {
                     foGateIndexes.add(outputGate.getIndex());

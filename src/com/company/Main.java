@@ -54,7 +54,7 @@ public class Main {
     }
 
     public Element decaps(CipherParameters secretKey, String w) {
-        FLTCCDKEMEngine kem = new FLTCCDKEMEngine(true, new FLTCCDDecryptionParameters((FLTCCDSecretKeyParameters) secretKey, w));
+        FLTCCDKEMEngine kem = new FLTCCDKEMEngine(false, new FLTCCDDecryptionParameters((FLTCCDSecretKeyParameters) secretKey, w));
 
         FLTCCDKEMEngineDecryptionResult decryptionResult = (FLTCCDKEMEngineDecryptionResult) kem.process();
 
