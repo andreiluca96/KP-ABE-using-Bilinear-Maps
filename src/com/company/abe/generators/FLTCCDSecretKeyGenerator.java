@@ -127,7 +127,7 @@ public class FLTCCDSecretKeyGenerator {
             }
         }
 
-        return new FLTCCDSecretKeyParameters(pp.getParameters(), circuit, d, p);
+        return new FLTCCDSecretKeyParameters(pp.getParameters(), circuit, d, p, params.getEncryptionResult());
     }
 
     private List<Element> getSimpleGateElements(Map<Integer, List<Element>> s, Element y, List<FLTCCDDefaultGate> topDownGates, FLTCCDDefaultGate gate) {

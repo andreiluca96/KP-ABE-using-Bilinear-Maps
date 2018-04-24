@@ -6,6 +6,7 @@ import java.util.List;
 
 public class FLTCCDKEMEngineEncryptionResult implements FLTCCDKEMEngineResult {
     private Element ys;
+    private Element gs;
     private List<Element> e;
 
     public Element getYs() {
@@ -22,5 +23,13 @@ public class FLTCCDKEMEngineEncryptionResult implements FLTCCDKEMEngineResult {
 
     public void setE(List<Element> e) {
         this.e = e;
+    }
+
+    public Element getGs() {
+        return gs;
+    }
+
+    public void setGs(Element gs) {
+        this.gs = gs;
     }
 }

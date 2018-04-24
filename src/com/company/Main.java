@@ -6,18 +6,17 @@ import com.company.abe.generators.FLTCCDKeyPairGenerator;
 import com.company.abe.generators.FLTCCDParametersGenerator;
 import com.company.abe.generators.FLTCCDSecretKeyGenerator;
 import com.company.abe.kem.FLTCCDKEMEngine;
+import com.company.abe.kem.results.FLTCCDKEMEngineDecryptionResult;
+import com.company.abe.kem.results.FLTCCDKEMEngineEncryptionResult;
 import com.company.abe.parameters.*;
-import it.unisa.dia.gas.crypto.kem.KeyEncapsulationMechanism;
+import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
 import it.unisa.dia.gas.plaf.jpbc.pairing.a.TypeACurveGenerator;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 import static com.company.abe.circuit.FLTCCDDefaultCircuit.FLTCCDGateType.*;
 import static org.junit.Assert.*;
@@ -38,65 +37,28 @@ public class Main {
         return setup.generateKeyPair();
     }
 
-    private byte[][] encaps(CipherParameters publicKey, String w) {
-        try {
-            FLTCCDKEMEngine kem = new FLTCCDKEMEngine(true, new FLTCCDEncryptionParameters((FLTCCDPublicKeyParameters) publicKey, w));
+    private FLTCCDKEMEngineEncryptionResult encaps(CipherParameters publicKey, String w) {
+        FLTCCDKEMEngine kem = new FLTCCDKEMEngine(true, new FLTCCDEncryptionParameters((FLTCCDPublicKeyParameters) publicKey, w));
 
-            byte[] result = kem.process();
-            byte[] size = new byte[4];
-
-            for (int i = 0; i < 4; i++) {
-                size[i] = result[i];
-            }
-
-            ByteBuffer wrapped = ByteBuffer.wrap(size);
-
-            int secretSize = wrapped.getInt();
-            byte[] secret = new byte[secretSize];
-            for (int i = 0; i < secretSize; i++) {
-                secret[i] = result[i + 4];
-            }
-
-            byte[] encryptionParams = new byte[result.length - secretSize - 4];
-            for (int i = 0; i < result.length - secretSize - 4; i++) {
-                encryptionParams[i] = result[i + secretSize + 4];
-            }
-
-            return new byte[][]{secret, encryptionParams};
-        } catch (InvalidCipherTextException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-        return null;
+        return (FLTCCDKEMEngineEncryptionResult) kem.process();
     }
 
-    public CipherParameters keyGen(CipherParameters publicKey, CipherParameters masterSecretKey, FLTCCDDefaultCircuit circuit) {
+    public CipherParameters keyGen(CipherParameters publicKey, CipherParameters masterSecretKey, FLTCCDDefaultCircuit circuit, FLTCCDKEMEngineEncryptionResult encryptionResult) {
         FLTCCDSecretKeyGenerator keyGen = new FLTCCDSecretKeyGenerator();
         keyGen.init(new FLTCCDSecretKeyGenerationParameters(
                 (FLTCCDPublicKeyParameters) publicKey,
                 (FLTCCDMasterSecretKeyParameters) masterSecretKey,
-                circuit
+                circuit, encryptionResult
         ));
         return keyGen.generateKey();
     }
 
-    public byte[] decaps(CipherParameters secretKey, byte[] encryptionParams, String w) {
-        try {
-            KeyEncapsulationMechanism kem = new FLTCCDKEMEngine();
+    public Element decaps(CipherParameters secretKey, String w) {
+        FLTCCDKEMEngine kem = new FLTCCDKEMEngine(true, new FLTCCDDecryptionParameters((FLTCCDSecretKeyParameters) secretKey, w));
 
-            kem.init(false, new FLTCCDDecryptionParameters((FLTCCDSecretKeyParameters) secretKey, w));
-            byte[] key = kem.processBlock(encryptionParams);
+        FLTCCDKEMEngineDecryptionResult decryptionResult = (FLTCCDKEMEngineDecryptionResult) kem.process();
 
-            assertNotNull(key);
-            assertNotSame(0, key.length);
-
-            return key;
-        } catch (InvalidCipherTextException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-
-        return null;
+        return decryptionResult.getKey();
     }
 
     public static void main(String[] args) throws IOException {
@@ -123,15 +85,12 @@ public class Main {
         String assignment = "1101";
 
         // Encryption phase
-        byte[][] ct = main.encaps(keyPair.getPublic(), assignment);
-
-        assert ct != null;
-        byte[] secret = ct[0];
+        FLTCCDKEMEngineEncryptionResult encryptionResult = main.encaps(keyPair.getPublic(), assignment);
 
         // Key Generation phase
-        CipherParameters secretKey = main.keyGen(keyPair.getPublic(), keyPair.getPrivate(), circuit);
+        CipherParameters secretKey = main.keyGen(keyPair.getPublic(), keyPair.getPrivate(), circuit, encryptionResult);
 
         // Decryption phase
-        assertEquals(true, Arrays.equals(secret, main.decaps(secretKey, ct[1], assignment)));
+        assertEquals(encryptionResult.getYs().toBigInteger(), main.decaps(secretKey, assignment).toBigInteger());
     }
 }

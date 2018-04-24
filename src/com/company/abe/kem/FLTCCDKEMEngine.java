@@ -1,6 +1,7 @@
 package com.company.abe.kem;
 
 import com.company.abe.circuit.FLTCCDDefaultCircuit;
+import com.company.abe.kem.results.FLTCCDKEMEngineDecryptionResult;
 import com.company.abe.kem.results.FLTCCDKEMEngineEncryptionResult;
 import com.company.abe.kem.results.FLTCCDKEMEngineResult;
 import com.company.abe.parameters.*;
@@ -8,12 +9,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.jpbc.Pairing;
-import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamReader;
-import it.unisa.dia.gas.plaf.jpbc.util.io.PairingStreamWriter;
 import org.junit.Assert;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
@@ -44,53 +41,37 @@ public class FLTCCDKEMEngine {
     public FLTCCDKEMEngineResult process() {
         String assignment;
         if (this.keyParameters instanceof FLTCCDDecryptionParameters) {
+            FLTCCDKEMEngineDecryptionResult decryptionResult = new FLTCCDKEMEngineDecryptionResult();
+
+
             // decryption phase
             FLTCCDDecryptionParameters decKey = (FLTCCDDecryptionParameters) this.keyParameters;
             FLTCCDSecretKeyParameters sk = decKey.getSecretKey();
             assignment = decKey.getAssignment();
-            PairingStreamReader reader = new PairingStreamReader(this.pairing, in, inOff);
-            List<Element> ts = Lists.newArrayList();
 
-            assert assignment.length() == sk.getCircuit().getN();
-
-            for (int i = 0; i < sk.getCircuit().getN(); i++) {
-                if (assignment.charAt(i) == '1') {
-                    ts.add(reader.readG1Element());
-                } else {
-                    ts.add(null);
-                }
-            }
-
-            Element gs = reader.readG1Element();
+            List<Element> e = decKey.getSecretKey().getEncryptionResult().getE();
 
             Map<Integer, List<Element>> vA = Maps.newHashMap();
             for (int i = 0; i < sk.getCircuit().getN(); i++) {
-                if (assignment.charAt(i) == '1') {
-                    vA.put(i, Lists.newArrayList());
-                } else {
-                    continue;
-                }
+                List<Element> elements = Lists.newArrayList();
 
-                List<Element> di = sk.getDElementsAt(i);
-                for (int j = 0; j < di.size(); i++) {
-                    Element element1 = pairing
-                            .getG1()
-                            .newOneElement()
-                            .powZn(ts.get(i));
-                    Element element2 = pairing
-                            .getG2()
-                            .newOneElement()
-                            .powZn(sk.getDElementsAt(i).get(j));
-                    Element element = pairing
-                            .pairing(element1, element2);
+                for (int j = 0; j < decKey.getSecretKey().getDElementsAt(i).size(); j++) {
+                    if (assignment.charAt(i) == '1') {
+                        Element element1 = e.get(i).duplicate();
+                        Element element2 = decKey.getSecretKey().getDElementsAt(i).get(j);
+                        Element element = pairing.pairing(element1, element2);
 
-                    vA.get(i).add(element);
+                        elements.add(element);
+                    } else {
+                        elements.add(null);
+                    }
                 }
             }
 
-            Element key = reconstruct(decKey.getSecretKey().getCircuit(), decKey.getSecretKey(), vA, gs);
+            Element key = reconstruct(decKey.getSecretKey().getCircuit(), decKey.getSecretKey(), vA, decKey.getSecretKey().getEncryptionResult().getGs());
+            decryptionResult.setKey(key);
 
-            return key.toBytes();
+            return decryptionResult;
         } else {
             FLTCCDKEMEngineEncryptionResult encryptionResult = new FLTCCDKEMEngineEncryptionResult();
             // encryption phase
