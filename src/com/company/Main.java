@@ -82,7 +82,7 @@ public class Main {
 
         // Setup phase
         AsymmetricCipherKeyPair keyPair = main.setup(n);
-        String assignment = "1101";
+        String assignment = "1111";
 
         // Encryption phase
         FLTCCDKEMEngineEncryptionResult encryptionResult = main.encaps(keyPair.getPublic(), assignment);
@@ -91,6 +91,6 @@ public class Main {
         CipherParameters secretKey = main.keyGen(keyPair.getPublic(), keyPair.getPrivate(), circuit, encryptionResult);
 
         // Decryption phase
-        assertEquals(encryptionResult.getYs().toBigInteger(), main.decaps(secretKey, assignment).toBigInteger());
+        assertEquals(encryptionResult.getYs(), main.decaps(secretKey, assignment));
     }
 }

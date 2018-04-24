@@ -92,10 +92,11 @@ public class FLTCCDKEMEngine {
                 }
             }
 
-            Element ys = this.pairing.getG1().newOneElement().powZn(s);
+            Element ys = encKey.getPublicKey().getY().duplicate().powZn(s);
 
             encryptionResult.setE(e);
             encryptionResult.setYs(ys);
+            encryptionResult.setGs(this.pairing.getG1().newOneElement().powZn(s));
 
             return encryptionResult;
         }
@@ -140,6 +141,9 @@ public class FLTCCDKEMEngine {
                             }
                         }
 
+                        if (outputGateIndex == -1) {
+                            return elements.get(0);
+                        }
                         r.put(circuit.getWireIndex(gate.getIndex(), outputGateIndex), elements);
 
                         break;
@@ -166,6 +170,9 @@ public class FLTCCDKEMEngine {
                             }
                         }
 
+                        if (outputGateIndex == -1) {
+                            return elements.get(0);
+                        }
                         r.put(circuit.getWireIndex(gate.getIndex(), outputGateIndex), elements);
 
                         break;
@@ -174,13 +181,13 @@ public class FLTCCDKEMEngine {
                         List<Integer> foGateIndexes = getFOGateIndexes(bottomUpGates, gate);
 
                         // splitting
-                        Map<Integer, List<Element>> splittRs = Maps.newHashMap();
+                        Map<Integer, List<Element>> splitRs = Maps.newHashMap();
                         List<Element> gateRs = r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex()));
                         for (int i = 0; i < foGateIndexes.size(); i++) {
                             int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndexes.get(i));
                             int listSize = secretKey.getPElementsAt(wireIndex).size();
 
-                            splittRs.put(wireIndex, gateRs.subList(0, listSize));
+                            splitRs.put(wireIndex, gateRs.subList(0, listSize));
                             gateRs = gateRs.subList(listSize, gateRs.size());
                         }
 
@@ -188,8 +195,12 @@ public class FLTCCDKEMEngine {
                             int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndexes.get(i));
 
                             List<Element> elements = Lists.newArrayList();
-                            for (int j = 0; j < splittRs.get(wireIndex).size(); j++) {
-                                Element element = splittRs.get(wireIndex).get(j).duplicate().mul(pairing.pairing(secretKey.getPElementsAt(wireIndex).get(j), gs));
+                            for (int j = 0; j < splitRs.get(wireIndex).size(); j++) {
+                                if (splitRs.get(wireIndex).get(j) == null) {
+                                    elements.add(null);
+                                    continue;
+                                }
+                                Element element = splitRs.get(wireIndex).get(j).duplicate().mul(pairing.pairing(secretKey.getPElementsAt(wireIndex).get(j), gs));
                                 elements.add(element);
                             }
                             r.put(circuit.getWireIndex(gate.getIndex(), wireIndex), elements);
