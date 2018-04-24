@@ -1,6 +1,7 @@
 package com.company.abe.kem;
 
 import com.company.abe.circuit.FLTCCDDefaultCircuit;
+import com.company.abe.kem.results.FLTCCDKEMEngineEncryptionResult;
 import com.company.abe.kem.results.FLTCCDKEMEngineResult;
 import com.company.abe.parameters.*;
 import com.google.common.collect.Lists;
@@ -91,33 +92,30 @@ public class FLTCCDKEMEngine {
 
             return key.toBytes();
         } else {
+            FLTCCDKEMEngineEncryptionResult encryptionResult = new FLTCCDKEMEngineEncryptionResult();
             // encryption phase
-            FLTCCDEncryptionParameters encKey = (FLTCCDEncryptionParameters)this.keyParameters;
+            FLTCCDEncryptionParameters encKey = (FLTCCDEncryptionParameters) this.keyParameters;
             FLTCCDPublicKeyParameters publicKey = encKey.getPublicKey();
             assignment = encKey.getAssignment();
-            PairingStreamWriter writer = new PairingStreamWriter(this.getOutputBlockSize());
 
-            try {
-                Element s = this.pairing.getZr().newRandomElement().getImmutable();
-                Element mask = publicKey.getY().powZn(s);
+            Element s = this.pairing.getZr().newRandomElement().getImmutable();
+            int n = publicKey.getParameters().getN();
+            List<Element> e = Lists.newArrayList();
 
-                writer.write(ByteBuffer.allocate(4).putInt(mask.toCanonicalRepresentation().length).array());
-                writer.write(mask.toCanonicalRepresentation());
-
-                int n = publicKey.getParameters().getN();
-
-                for(int i = 0; i < n; ++i) {
-                    if (assignment.charAt(i) == '1') {
-                        writer.write(publicKey.getCapitalTAt(i).powZn(s));
-                    }
+            for(int i = 0; i < n; ++i) {
+                if (assignment.charAt(i) == '1') {
+                    e.add(publicKey.getCapitalTAt(i).powZn(s));
+                } else {
+                    e.add(null);
                 }
-
-                writer.write(this.pairing.getFieldAt(1).newElement().powZn(s));
-            } catch (IOException var19) {
-                throw new RuntimeException(var19);
             }
 
-            return writer.toBytes();
+            Element ys = this.pairing.getG1().newOneElement().powZn(s);
+
+            encryptionResult.setE(e);
+            encryptionResult.setYs(ys);
+
+            return encryptionResult;
         }
     }
 

@@ -4,7 +4,7 @@ import it.unisa.dia.gas.jpbc.Element;
 
 import java.util.List;
 
-public class FLTCCDKEMEngineEncryptionResult {
+public class FLTCCDKEMEngineEncryptionResult implements FLTCCDKEMEngineResult {
     private Element ys;
     private List<Element> e;
 

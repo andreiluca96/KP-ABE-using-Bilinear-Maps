@@ -2,7 +2,7 @@ package com.company.abe.kem.results;
 
 import it.unisa.dia.gas.jpbc.Element;
 
-public class FLTCCDKEMEngineDecryptionResult {
+public class FLTCCDKEMEngineDecryptionResult implements FLTCCDKEMEngineResult {
     private Element key;
 
     public Element getKey() {
