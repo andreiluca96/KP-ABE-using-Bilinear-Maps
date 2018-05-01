@@ -57,9 +57,13 @@ public class FLTCCDKEMEngine {
 
                 for (int j = 0; j < decKey.getSecretKey().getDElementsAt(i).size(); j++) {
                     if (assignment.charAt(i) == '1') {
-                        Element element1 = e.get(i).duplicate();
-                        Element element2 = decKey.getSecretKey().getDElementsAt(i).get(j);
-                        Element element = pairing.pairing(element1, element2);
+
+                        Element element = null;
+                        try {
+                            Element element1 = e.get(i).duplicate();
+                            Element element2 = decKey.getSecretKey().getDElementsAt(i).get(j);
+                            element = pairing.pairing(element1, element2);
+                        } catch (Exception ignored) {}
 
                         elements.add(element);
                     } else {

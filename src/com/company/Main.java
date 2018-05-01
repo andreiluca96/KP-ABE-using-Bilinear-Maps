@@ -12,6 +12,7 @@ import com.company.abe.parameters.*;
 import it.unisa.dia.gas.jpbc.Element;
 import it.unisa.dia.gas.plaf.jpbc.pairing.PairingFactory;
 import it.unisa.dia.gas.plaf.jpbc.pairing.a.TypeACurveGenerator;
+import it.unisa.dia.gas.plaf.jpbc.pairing.e.TypeECurveGenerator;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
 
@@ -31,7 +32,7 @@ public class Main {
         setup.init(new FLTCCDKeyPairGenerationParameters(
                 new SecureRandom(),
                 new FLTCCDParametersGenerator().init(
-                        PairingFactory.getPairing(new TypeACurveGenerator(rBits, qBits).generate()), n
+                        PairingFactory.getPairing("F:\\Facultate\\Licenta\\KP-ABE--Access-control-model-using-Bilinear-Maps\\src\\com\\company\\toy.properties"), n
                 ).generateParameters()
         ));
         return setup.generateKeyPair();
@@ -61,7 +62,7 @@ public class Main {
         return decryptionResult.getKey();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         int n = 4;
         int q = 5;
 
@@ -82,7 +83,7 @@ public class Main {
 
         // Setup phase
         AsymmetricCipherKeyPair keyPair = main.setup(n);
-        String assignment = "1111";
+        String assignment = "1100";
 
         // Encryption phase
         FLTCCDKEMEngineEncryptionResult encryptionResult = main.encaps(keyPair.getPublic(), assignment);
@@ -90,6 +91,7 @@ public class Main {
         // Key Generation phase
         CipherParameters secretKey = main.keyGen(keyPair.getPublic(), keyPair.getPrivate(), circuit, encryptionResult);
 
+        assignment = "1010";
         // Decryption phase
         assertEquals(encryptionResult.getYs(), main.decaps(secretKey, assignment));
     }

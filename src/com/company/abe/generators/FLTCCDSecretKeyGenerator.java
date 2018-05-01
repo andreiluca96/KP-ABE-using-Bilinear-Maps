@@ -69,8 +69,9 @@ public class FLTCCDSecretKeyGenerator {
                     for (Element element : elements) {
                         Element x1 = pairing.getZr()
                                 .newRandomElement();
-                        Element x2 = pairing.getZr()
-                                .newElement(x1.duplicate().toBigInteger().negate().add(element.toBigInteger()));
+                        Element x2 = x1.duplicate()
+                                        .negate()
+                                        .add(element.duplicate());
 
                         l1.add(x1);
                         l2.add(x2);
@@ -90,8 +91,7 @@ public class FLTCCDSecretKeyGenerator {
                         for (Element element : entry.getValue()) {
                             Element x1 = pairing.getZr()
                                     .newRandomElement();
-                            Element x2 = pairing.getZr()
-                                    .newElement(x1.duplicate().toBigInteger().negate().add(element.toBigInteger()));
+                            Element x2 = x1.duplicate().negate().add(element);
 
                             sElements.add(x1);
                             pElements.add(pairing.getG1().newOneElement().powZn(x2));
