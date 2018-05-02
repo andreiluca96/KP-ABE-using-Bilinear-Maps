@@ -9,6 +9,7 @@ import it.unisa.dia.gas.jpbc.Pairing;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPairGenerator;
 import org.bouncycastle.crypto.KeyGenerationParameters;
+import org.junit.Assert;
 
 public class FLTCCDKeyPairGenerator implements AsymmetricCipherKeyPairGenerator {
     FLTCCDKeyPairGenerationParameters parameters;
@@ -23,7 +24,10 @@ public class FLTCCDKeyPairGenerator implements AsymmetricCipherKeyPairGenerator 
         FLTCCDParameters parameters = this.parameters.getParameters();
         Pairing pairing = parameters.getPairing();
 
-        Element groupGenerator = pairing.getG1().newRandomElement();
+        Assert.assertTrue(pairing.getG1().getOrder().isProbablePrime(99));
+        Assert.assertTrue(pairing.getG2().getOrder().isProbablePrime(99));
+
+        Element groupGenerator = pairing.getG1().newRandomElement().getImmutable();
 
         Element y = pairing.getZr().newRandomElement().getImmutable();
         int n = parameters.getN();

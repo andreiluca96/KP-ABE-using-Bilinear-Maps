@@ -15,7 +15,6 @@ import it.unisa.dia.gas.plaf.jpbc.pairing.a.TypeACurveGenerator;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
 
-import java.io.IOException;
 import java.security.SecureRandom;
 
 import static com.company.abe.circuit.FLTCCDDefaultCircuit.FLTCCDGateType.*;
@@ -82,6 +81,7 @@ public class Main {
 
         // Setup phase
         AsymmetricCipherKeyPair keyPair = main.setup(n);
+
         String assignment = "1111";
 
         // Encryption phase

@@ -121,8 +121,7 @@ public class FLTCCDSecretKeyGenerator {
                 Element dElement = params.getPublicKeyParameters()
                         .getGroupGenerator()
                         .duplicate()
-                        .powZn(elements.get(j))
-                        .powZn(params.getMasterSecretKeyParameters().getTAt(i).duplicate().invert());
+                        .powZn(elements.get(j).div(params.getMasterSecretKeyParameters().getTAt(i)));
 
                 d.get(i).add(dElement);
             }
