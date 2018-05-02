@@ -96,7 +96,7 @@ public class FLTCCDKEMEngine {
 
             encryptionResult.setE(e);
             encryptionResult.setYs(ys);
-            encryptionResult.setGs(this.pairing.getG1().newOneElement().powZn(s));
+            encryptionResult.setGs(publicKey.getGroupGenerator().duplicate().powZn(s));
 
             return encryptionResult;
         }

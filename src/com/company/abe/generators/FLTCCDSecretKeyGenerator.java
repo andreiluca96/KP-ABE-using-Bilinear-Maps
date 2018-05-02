@@ -94,7 +94,7 @@ public class FLTCCDSecretKeyGenerator {
                                     .newElement(x1.duplicate().toBigInteger().negate().add(element.toBigInteger()));
 
                             sElements.add(x1);
-                            pElements.add(pairing.getG1().newOneElement().powZn(x2));
+                            pElements.add(params.getPublicKeyParameters().getGroupGenerator().duplicate().powZn(x2));
                         }
 
                         p.put(entry.getKey(), pElements);
@@ -118,10 +118,11 @@ public class FLTCCDSecretKeyGenerator {
             List<Element> elements = getSimpleGateElements(s, y, topDownGates, this.circuit.getGateAt(i));
 
             for (int j = 0; j < elements.size(); j++) {
-                Element dElement = pairing.getG1()
-                        .newOneElement()
+                Element dElement = params.getPublicKeyParameters()
+                        .getGroupGenerator()
+                        .duplicate()
                         .powZn(elements.get(j))
-                        .powZn(params.getPublicKeyParameters().getCapitalTAt(i));
+                        .powZn(params.getMasterSecretKeyParameters().getTAt(i).duplicate().invert());
 
                 d.get(i).add(dElement);
             }
