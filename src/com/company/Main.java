@@ -61,7 +61,7 @@ public class Main {
         return decryptionResult.getKey();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         int n = 4;
         int q = 5;
 
