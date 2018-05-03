@@ -124,20 +124,20 @@ public class FLTCCDKEMEngine {
                     case OR: {
                         int outputGateIndex = getOutputGateIndex(bottomUpGates, gate);
 
-                        Assert.assertEquals(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).size(),
-                                r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).size());
+                        Assert.assertEquals(r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).size(),
+                                r.get(circuit.getWireIndex(gate.getInputIndexAt(1), gate.getIndex())).size());
                         List<Element> elements = Lists.newArrayList();
-                        for (int i = 0; i < r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).size(); i++) {
-                            if (r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).get(i) == null) {
-                                if (r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).get(i) == null) {
+                        for (int i = 0; i < r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).size(); i++) {
+                            if (r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).get(i) == null) {
+                                if (r.get(circuit.getWireIndex(gate.getInputIndexAt(1), gate.getIndex())).get(i) == null) {
                                     elements.add(null);
                                 } else {
-                                    elements.add(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).get(i).duplicate());
+                                    elements.add(r.get(circuit.getWireIndex(gate.getInputIndexAt(1), gate.getIndex())).get(i).duplicate());
                                 }
                             } else {
-                                Assert.assertEquals(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).get(i),
-                                        r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).get(i));
-                                elements.add(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).get(i).duplicate());
+                                Assert.assertEquals(r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).get(i),
+                                        r.get(circuit.getWireIndex(gate.getInputIndexAt(1), gate.getIndex())).get(i));
+                                elements.add(r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).get(i).duplicate());
                             }
                         }
 
