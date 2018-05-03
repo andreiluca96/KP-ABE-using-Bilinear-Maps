@@ -57,11 +57,15 @@ public class FLTCCDKEMEngine {
 
                 for (int j = 0; j < decKey.getSecretKey().getDElementsAt(i).size(); j++) {
                     if (assignment.charAt(i) == '1') {
-                        Element element1 = e.get(i).duplicate();
-                        Element element2 = decKey.getSecretKey().getDElementsAt(i).get(j);
-                        Element element = pairing.pairing(element1, element2);
+                        try {
+                            Element element1 = e.get(i).duplicate();
+                            Element element2 = decKey.getSecretKey().getDElementsAt(i).get(j);
+                            Element element = pairing.pairing(element1, element2);
 
-                        elements.add(element);
+                            elements.add(element);
+                        } catch (Exception e1) {
+                            elements.add(null);
+                        }
                     } else {
                         elements.add(null);
                     }
@@ -135,8 +139,6 @@ public class FLTCCDKEMEngine {
                                     elements.add(r.get(circuit.getWireIndex(gate.getInputIndexAt(1), gate.getIndex())).get(i).duplicate());
                                 }
                             } else {
-                                Assert.assertEquals(r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).get(i),
-                                        r.get(circuit.getWireIndex(gate.getInputIndexAt(1), gate.getIndex())).get(i));
                                 elements.add(r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).get(i).duplicate());
                             }
                         }
