@@ -151,20 +151,17 @@ public class FLTCCDKEMEngine {
                     case AND: {
                         int outputGateIndex = getOutputGateIndex(bottomUpGates, gate);
 
-                        Assert.assertEquals(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).size(),
-                                r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).size());
+                        Assert.assertEquals(r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).size(),
+                                r.get(circuit.getWireIndex(gate.getInputIndexAt(1), gate.getIndex())).size());
 
                         List<Element> elements = Lists.newArrayList();
-                        for (int i = 0; i < r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).size(); i++) {
-                            if (r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).get(i) == null ||
-                                    r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).get(i) == null) {
+                        for (int i = 0; i < r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).size(); i++) {
+                            if (r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).get(i) == null ||
+                                    r.get(circuit.getWireIndex(gate.getInputIndexAt(1), gate.getIndex())).get(i) == null) {
                                 elements.add(null);
                             } else {
-                                Assert.assertEquals(r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).get(i),
-                                        r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).get(i));
-
-                                Element element1 = r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(0))).get(i).duplicate();
-                                Element element2 = r.get(circuit.getWireIndex(gate.getIndex(), gate.getInputIndexAt(1))).get(i).duplicate();
+                                Element element1 = r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex())).get(i).duplicate();
+                                Element element2 = r.get(circuit.getWireIndex(gate.getInputIndexAt(1), gate.getIndex())).get(i).duplicate();
 
                                 elements.add(element1.mul(element2));
                             }
@@ -173,6 +170,7 @@ public class FLTCCDKEMEngine {
                         if (outputGateIndex == -1) {
                             return elements.get(0);
                         }
+
                         r.put(circuit.getWireIndex(gate.getIndex(), outputGateIndex), elements);
 
                         break;
