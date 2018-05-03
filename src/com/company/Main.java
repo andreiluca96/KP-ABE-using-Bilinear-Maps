@@ -90,7 +90,7 @@ public class Main {
         // Key Generation phase
         CipherParameters secretKey = main.keyGen(keyPair.getPublic(), keyPair.getPrivate(), circuit, encryptionResult);
 
-        assignment = "0011";
+        assignment = "0111";
 
         // Decryption phase
         assertEquals(encryptionResult.getYs(), main.decaps(secretKey, assignment));
