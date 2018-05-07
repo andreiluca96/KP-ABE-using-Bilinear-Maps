@@ -203,7 +203,7 @@ public class FLTCCDKEMEngine {
                                 Element element = splitRs.get(wireIndex).get(j).duplicate().mul(pairing.pairing(secretKey.getPElementsAt(wireIndex).get(j), gs));
                                 elements.add(element);
                             }
-                            r.put(circuit.getWireIndex(gate.getIndex(), wireIndex), elements);
+                            r.put(wireIndex, elements);
                         }
 
                         break;

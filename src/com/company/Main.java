@@ -61,13 +61,20 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        int n = 2;
-        int q = 1;
+        int n = 4;
+        int q = 5;
 
         FLTCCDDefaultCircuit circuit = new FLTCCDDefaultCircuit(n, q, 3, new FLTCCDDefaultGate[]{
                 new FLTCCDDefaultGate(INPUT, 0, 1),
                 new FLTCCDDefaultGate(INPUT, 1, 1),
-                new FLTCCDDefaultGate(AND, 2, 1, new int[]{0, 1}),
+                new FLTCCDDefaultGate(INPUT, 2, 1),
+                new FLTCCDDefaultGate(INPUT, 3, 1),
+
+                new FLTCCDDefaultGate(FO, 4, 2, new int[]{2}),
+                new FLTCCDDefaultGate(OR, 5, 3, new int[]{1, 4}),
+                new FLTCCDDefaultGate(AND, 6, 3, new int[]{3, 4}),
+                new FLTCCDDefaultGate(AND, 7, 4, new int[]{0, 5}),
+                new FLTCCDDefaultGate(OR, 8, 3, new int[]{6, 7})
         });
 
         Main main = new Main();
@@ -75,13 +82,15 @@ public class Main {
         // Setup phase
         AsymmetricCipherKeyPair keyPair = main.setup(n);
 
-        String assignment = "11";
+        String assignment = "1111";
 
         // Encryption phase
         FLTCCDKEMEngineEncryptionResult encryptionResult = main.encaps(keyPair.getPublic(), assignment);
 
         // Key Generation phase
         CipherParameters secretKey = main.keyGen(keyPair.getPublic(), keyPair.getPrivate(), circuit, encryptionResult);
+
+        assignment = "0011";
 
         // Decryption phase
         assertEquals(encryptionResult.getYs(), main.decaps(secretKey, assignment));
