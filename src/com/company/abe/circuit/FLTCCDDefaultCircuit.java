@@ -2,12 +2,15 @@ package com.company.abe.circuit;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.junit.Assert;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import static com.company.abe.circuit.FLTCCDDefaultCircuit.FLTCCDGateType.KN;
 
 public class FLTCCDDefaultCircuit {
     private int n;
@@ -96,6 +99,7 @@ public class FLTCCDDefaultCircuit {
         private int depth;
         private int[] inputs;
         private boolean value;
+        private int k = -1;
 
         public FLTCCDDefaultGate(FLTCCDGateType type, int index, int depth) {
             this.type = type;
@@ -108,6 +112,18 @@ public class FLTCCDDefaultCircuit {
             this.index = index;
             this.depth = depth;
             this.inputs = Arrays.copyOf(inputs, inputs.length);
+        }
+
+        public FLTCCDDefaultGate(FLTCCDGateType type, int index, int depth, int[] inputs, int k) {
+            this.type = type;
+            this.index = index;
+            this.depth = depth;
+            this.k = k;
+            this.inputs = Arrays.copyOf(inputs, inputs.length);
+
+            if (type == KN) {
+                Assert.assertTrue(k > 0 && k <= inputs.length);
+            }
         }
 
         public FLTCCDGateType getType() {
@@ -170,6 +186,7 @@ public class FLTCCDDefaultCircuit {
         INPUT,
         AND,
         OR,
-        FO;
+        FO,
+        KN
     }
 }
