@@ -113,16 +113,16 @@ public class FLTCCDSecretKeyGenerator {
                         s.put(this.circuit.getWireIndex(gate.getInputIndexAt(i), gate.getIndex()), Lists.newArrayList());
                     }
 
-                    for (int i = 0; i < inputElements.size(); i++) {
+                    for (Element inputElement : inputElements) {
                         // generate polynomial of K degree
                         // The polynomial has the following form: a0 + a_1 * x + ... + a_(k-1) * x^(k-1)
                         final List<Element> polynomial = Lists.newArrayList();
-                        IntStream.range(0, gate.getK()).forEach(value -> {
-                            polynomial.add(pairing.getZr().newRandomElement());
-                        });
+                        IntStream.range(0, gate.getK())
+                                .forEach(value -> polynomial.add(pairing.getZr().newRandomElement()));
+                        polynomial.set(0, inputElement);
 
                         List<Element> elements = IntStream.range(1, gate.getInputSize() + 1)
-                                .mapToObj(value -> evaluatePolynomial(polynomial, value).mul(getBetaProduct(value, gate.getInputSize())))
+                                .mapToObj(value -> evaluatePolynomial(polynomial, value))
                                 .collect(Collectors.toList());
 
                         for (int j = 0; j < gate.getInputSize(); j++) {
@@ -158,12 +158,12 @@ public class FLTCCDSecretKeyGenerator {
         return new FLTCCDSecretKeyParameters(pp.getParameters(), circuit, d, p, params.getEncryptionResult());
     }
 
-    private Element getBetaProduct(int value, int n) {
+    private Element getBetaProduct(int value, int k) {
         Element element = pairing.getZr().newOneElement();
         Element zeroElement = pairing.getZr().newZeroElement();
         Element xiElement = pairing.getZr().newElement(value);
-        for (int i = 1; i <= n; i++) {
-            if (value == n) {
+        for (int i = 1; i <= k; i++) {
+            if (value == i) {
                 continue;
             }
             Element xjElement = pairing.getZr().newElement(i);

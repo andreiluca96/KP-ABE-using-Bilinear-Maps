@@ -150,6 +150,8 @@ public class FLTCCDKEMEngine {
 
                         break;
                     }
+                    case INPUT:
+                        break;
                     case AND: {
                         int outputGateIndex = getOutputGateIndex(bottomUpGates, gate);
 
@@ -183,16 +185,16 @@ public class FLTCCDKEMEngine {
                         // splitting
                         Map<Integer, List<Element>> splitRs = Maps.newHashMap();
                         List<Element> gateRs = r.get(circuit.getWireIndex(gate.getInputIndexAt(0), gate.getIndex()));
-                        for (int i = 0; i < foGateIndexes.size(); i++) {
-                            int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndexes.get(i));
+                        for (Integer foGateIndex : foGateIndexes) {
+                            int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndex);
                             int listSize = secretKey.getPElementsAt(wireIndex).size();
 
                             splitRs.put(wireIndex, gateRs.subList(0, listSize));
                             gateRs = gateRs.subList(listSize, gateRs.size());
                         }
 
-                        for (int i = 0; i < foGateIndexes.size(); i++) {
-                            int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndexes.get(i));
+                        for (Integer foGateIndex : foGateIndexes) {
+                            int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndex);
 
                             List<Element> elements = Lists.newArrayList();
                             for (int j = 0; j < splitRs.get(wireIndex).size(); j++) {
@@ -221,14 +223,46 @@ public class FLTCCDKEMEngine {
 
                         r.put(circuit.getWireIndex(gate.getIndex(), outputGateIndex), Lists.newArrayList());
                         for (int i = 0; i < size; i++) {
-                            Element element = null;
+                            Element element;
+                            List<Integer> ks = Lists.newArrayList();
+                            List<Element> elements = Lists.newArrayList();
                             for (int j = 0; j < gate.getInputSize(); j++) {
-                                if (element == null) {
-                                    element = r.get(circuit.getWireIndex(gate.getInputIndexAt(j), gate.getIndex())).get(i);
-                                } else {
-                                    element = element.mul(r.get(circuit.getWireIndex(gate.getInputIndexAt(j), gate.getIndex())).get(i));
+                                if (r.get(circuit.getWireIndex(gate.getInputIndexAt(j), gate.getIndex())).get(i) == null
+                                        || ks.size() >= gate.getK()) {
+                                    continue;
                                 }
+
+                                ks.add(j);
+                                elements.add(r.get(circuit.getWireIndex(gate.getInputIndexAt(j), gate.getIndex())).get(i));
                             }
+                            Assert.assertEquals(elements.size(), gate.getK());
+
+                            for (int j = 0; j < ks.size(); j++) {
+                                element = pairing.getZr().newOneElement();
+                                Element xjElement = pairing.getZr().newElement(ks.get(j));
+
+                                for (int jj = 0; jj < gate.getK(); jj++) {
+                                    if (jj == j) {
+                                        continue;
+                                    }
+
+                                    Element zeroElement = pairing.getZr().newZeroElement();
+                                    Element xjjElement = pairing.getZr().newElement(ks.get(jj));
+
+                                    element.mul(zeroElement.duplicate()
+                                            .sub(xjjElement)
+                                            .div(xjElement.duplicate().sub(xjjElement))
+                                    );
+                                }
+
+                                elements.get(j).powZn(element);
+                            }
+
+                            element = elements.get(0);
+                            for (int j = 1; j < gate.getK(); j++) {
+                                element = element.powZn(elements.get(j));
+                            }
+
                             r.get(circuit.getWireIndex(gate.getIndex(), outputGateIndex)).add(element);
                         }
 
