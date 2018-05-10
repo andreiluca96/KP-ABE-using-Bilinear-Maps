@@ -208,6 +208,32 @@ public class FLTCCDKEMEngine {
 
                         break;
                     }
+                    case KN: {
+                        int outputGateIndex = getOutputGateIndex(bottomUpGates, gate);
+
+                        int size = -1;
+                        for (int i = 0; i < gate.getInputSize(); i++) {
+                            if (size == -1) {
+                                size = r.get(circuit.getWireIndex(gate.getInputIndexAt(i), gate.getIndex())).size();
+                            }
+                            Assert.assertEquals(size, r.get(circuit.getWireIndex(gate.getInputIndexAt(i), gate.getIndex())).size());
+                        }
+
+                        r.put(circuit.getWireIndex(gate.getIndex(), outputGateIndex), Lists.newArrayList());
+                        for (int i = 0; i < size; i++) {
+                            Element element = null;
+                            for (int j = 0; j < gate.getInputSize(); j++) {
+                                if (element == null) {
+                                    element = r.get(circuit.getWireIndex(gate.getInputIndexAt(j), gate.getIndex())).get(i);
+                                } else {
+                                    element = element.mul(r.get(circuit.getWireIndex(gate.getInputIndexAt(j), gate.getIndex())).get(i));
+                                }
+                            }
+                            r.get(circuit.getWireIndex(gate.getIndex(), outputGateIndex)).add(element);
+                        }
+
+                        break;
+                    }
                     default:
                         break;
                 }
