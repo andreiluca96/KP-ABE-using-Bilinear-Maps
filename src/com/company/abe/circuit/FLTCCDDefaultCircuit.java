@@ -126,6 +126,10 @@ public class FLTCCDDefaultCircuit {
             }
         }
 
+        public int getK() {
+            return k;
+        }
+
         public FLTCCDGateType getType() {
             return this.type;
         }

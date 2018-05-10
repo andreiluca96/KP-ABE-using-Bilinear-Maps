@@ -16,6 +16,8 @@ import org.junit.Assert;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.company.abe.circuit.FLTCCDDefaultCircuit.*;
 import static com.google.common.collect.Lists.*;
@@ -104,6 +106,32 @@ public class FLTCCDSecretKeyGenerator {
 
                     break;
                 }
+                case KN: {
+                    List<Element> inputElements = getSimpleGateElements(s, y, topDownGates, gate);
+
+                    for (int i = 0; i < gate.getInputSize(); i++) {
+                        s.put(this.circuit.getWireIndex(gate.getInputIndexAt(i), gate.getIndex()), Lists.newArrayList());
+                    }
+
+                    for (int i = 0; i < inputElements.size(); i++) {
+                        // generate polynomial of K degree
+                        // The polynomial has the following form: a0 + a_1 * x + ... + a_(k-1) * x^(k-1)
+                        final List<Element> polynomial = Lists.newArrayList();
+                        IntStream.range(0, gate.getK()).forEach(value -> {
+                            polynomial.add(pairing.getZr().newRandomElement());
+                        });
+
+                        List<Element> elements = IntStream.range(1, gate.getInputSize() + 1)
+                                .mapToObj(value -> evaluatePolynomial(polynomial, value).mul(getBetaProduct(value, gate.getInputSize())))
+                                .collect(Collectors.toList());
+
+                        for (int j = 0; j < gate.getInputSize(); j++) {
+                            s.get(this.circuit.getWireIndex(gate.getInputIndexAt(j), gate.getIndex())).add(elements.get(j));
+                        }
+                    }
+
+                    break;
+                }
                 case INPUT: {
 
                     break;
@@ -117,17 +145,46 @@ public class FLTCCDSecretKeyGenerator {
             d.put(i, Lists.newArrayList());
             List<Element> elements = getSimpleGateElements(s, y, topDownGates, this.circuit.getGateAt(i));
 
-            for (int j = 0; j < elements.size(); j++) {
+            for (Element element : elements) {
                 Element dElement = params.getPublicKeyParameters()
                         .getGroupGenerator()
                         .duplicate()
-                        .powZn(elements.get(j).div(params.getMasterSecretKeyParameters().getTAt(i)));
+                        .powZn(element.div(params.getMasterSecretKeyParameters().getTAt(i)));
 
                 d.get(i).add(dElement);
             }
         }
 
         return new FLTCCDSecretKeyParameters(pp.getParameters(), circuit, d, p, params.getEncryptionResult());
+    }
+
+    private Element getBetaProduct(int value, int n) {
+        Element element = pairing.getZr().newOneElement();
+        Element zeroElement = pairing.getZr().newZeroElement();
+        Element xiElement = pairing.getZr().newElement(value);
+        for (int i = 1; i <= n; i++) {
+            if (value == n) {
+                continue;
+            }
+            Element xjElement = pairing.getZr().newElement(i);
+            element.mul(zeroElement
+                            .duplicate()
+                            .sub(xjElement)
+                            .div(xiElement.duplicate().sub(xjElement))
+                    );
+        }
+
+        return element.duplicate();
+    }
+
+    private Element evaluatePolynomial(List<Element> polynomial, int value) {
+        Element element = pairing.getZr().newZeroElement();
+        for (int i = 0; i < polynomial.size(); i++) {
+            Element elementValue = pairing.getZr().newElement(value).powZn(pairing.getZr().newElement(i));
+            element = element.add(polynomial.get(i).duplicate().mul(elementValue));
+        }
+
+        return element;
     }
 
     private List<Element> getSimpleGateElements(Map<Integer, List<Element>> s, Element y, List<FLTCCDDefaultGate> topDownGates, FLTCCDDefaultGate gate) {
