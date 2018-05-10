@@ -232,7 +232,7 @@ public class FLTCCDKEMEngine {
                                     continue;
                                 }
 
-                                ks.add(j);
+                                ks.add(j + 1);
                                 elements.add(r.get(circuit.getWireIndex(gate.getInputIndexAt(j), gate.getIndex())).get(i));
                             }
                             Assert.assertEquals(elements.size(), gate.getK());
@@ -260,7 +260,7 @@ public class FLTCCDKEMEngine {
 
                             element = elements.get(0);
                             for (int j = 1; j < gate.getK(); j++) {
-                                element = element.powZn(elements.get(j));
+                                element = element.mul(elements.get(j));
                             }
 
                             r.get(circuit.getWireIndex(gate.getIndex(), outputGateIndex)).add(element);
