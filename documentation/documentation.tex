@@ -1,0 +1,121 @@
+\documentclass[12pt]{article}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc} % or \usepackage[utf8x]{inputenc} for mor characters
+\usepackage{eurosym}
+\usepackage{textcomp}
+\usepackage{afterpage}
+\newcommand\blankpage{%
+    \null
+    \thispagestyle{empty}%
+    \addtocounter{page}{-1}%
+    \newpage}
+
+\usepackage{graphicx}
+
+\usepackage{sectsty}
+\usepackage[explicit]{titlesec}
+
+
+\allsectionsfont{\raggedright}
+
+
+\begin{document}
+
+
+\begin{titlepage}
+
+\begin{center}
+
+UNIVERSITY OF "ALEXANDRU IOAN CUZA" IAȘI
+\\
+\textbf{Faculty of Computer Science}
+\end{center}
+
+   \vspace{20mm}
+
+\begin{center}
+    \includegraphics{figures/fii.png}
+\end{center}
+   \vspace{10mm}
+\begin{center}
+	\Large{BACHELOR'S THESIS}\\
+	
+	\vspace{10mm}
+	
+	\large \textbf{Extenstion to the Key-Policy Attribute Based Encryption schema}\\
+	\vspace{5mm}
+	
+	proposed by
+	
+	\vspace{5mm}
+	\large\textit {LUCA ANDREI}
+	\\
+	\vspace{20mm}
+	\textbf{Date: }\textit{july, 2018}\\
+	\vspace{10mm}
+	\textbf{Coordinator}\\
+	\textbf{\textit{Prof.dr. Țiplea Ferucio Laurențiu}}
+	\vspace{30mm}
+\end{center}
+\end{titlepage} 
+
+\afterpage{\blankpage}
+
+\onecolumn
+\tableofcontents
+\twocolumn
+
+\onecolumn
+
+\section{Introduction}
+
+
+
+\subsection{Overview}
+
+\subsection{Related work}
+
+\section{Preliminaries}
+\subsection{Definitions}
+
+\section{Extension for the KP-ABE schema based on bilinear maps using boolean circuits with threshold gates}
+
+\subsection{Proposed schema}
+
+\subsubsection{Description}
+\subsubsection{Correctness}
+\subsubsection{Complexity}
+
+\subsection{Security proof}
+
+\subsection{Applications}
+
+\subsection{Implementation}
+
+\section{Conclusions}
+
+\pagebreak
+
+\blankpage
+
+\begin{thebibliography}{9}
+
+\bibitem{fltccd} 
+Ferucio Laurențiu Țiplea, Constantin Cătălin Drăgan, 
+\textit{Key-policy Attribute-based Encryption for Boolean Circuits from Bilinear Maps}, 2014.
+
+\bibitem{gghsw} 
+Sanjam Garg, Craig Gentry, Shai Halevi, Amit Sahai, Brent Waters 
+\textit{Attribute-Based Encryption for Circuits from Multilinear Maps}, 2013
+ 
+\bibitem{gpsw} 
+Vipul Goyal, Omkant Pandey, Amit Sahai, Brent Waters 
+\textit{Attribute-Based Encryption for Fine-Grained Access Control of Encrypted Data}, 2006
+ 
+\end{thebibliography}
+
+\vspace{\baselineskip}
+
+
+\end{document}
