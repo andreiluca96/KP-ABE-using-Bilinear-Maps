@@ -5,6 +5,7 @@
 \usepackage{eurosym}
 \usepackage{textcomp}
 \usepackage{afterpage}
+\usepackage{hyperref}
 \newcommand\blankpage{%
     \null
     \thispagestyle{empty}%
@@ -70,14 +71,68 @@ UNIVERSITY OF "ALEXANDRU IOAN CUZA" IAȘI
 
 \section{Introduction}
 
-
-
 \subsection{Overview}
+
+The \textit{Attribute based Encryption} field has been growing during the past years, but still lots of its' problems  remain unsolved, for example the \textit{Key-Policy Attribute based Encryption} proposed in \cite{gpsw} was successfully attacked using the \textbf{Backtracking attack} proposed in \cite{gghsw}. The same paper proposed a new schema to solve this problem based on multilinear maps, but this causes problems on the actual implementation of the schema, because at his moment, we don't have a proper way of generating these multilinear maps that preserves the security correctness. In this context, \cite{fltccd} paper proposed a new \textit{Key-Policy Attribute based Encryption} schema based on bilinear maps that thwarts the \textbf{Backtracking attack} but introduces another level of complixity by using \textbf{FO(Fan-Out) gates} for the boolean circuits. 
+
+This paper introduces an extension and the first implementation of the schema proposed in \cite{fltccd}. First of all, the extension puts forward a new way of defining the boolean circuits used for key construction by using threshold gates providing this way a more flexible construction of the boolean circuits. Second of all, the implementation is made in Java and uses the \textbf{Java Pairing-Based Cryptography Library} that provides an implementation of bilinear maps and operations on its elements and the \textbf{Bouncy Castle Library} for defining the cryptographic structures.
+
+\vspace{80mm}
 
 \subsection{Related work}
 
+This section is divided in two sections that show a part of the related works(or papers) with the extension of the \textit{threshold gates} in the \cite{fltccd} schema and specifies some preceding implementations from which this paper has inspired.  
+
+\subsubsection{Extension}
+
+The extension of the boolean circuits proposed in \cite{fltccd} schema by using threshold gates is obviously based on the \cite{fltccd} paper that proposes the first \textit{Key-policy Attribute-based Encryption (KP-ABE) scheme for monotone Boolean circuits based on bilinear maps}. This schema is an extension of the schema proposed in \cite{gpsw} and it uses just one bilinear map and secret sharing procedures. The problem with the schema mentioned in \cite{gpsw} is that it can be attacked using the \textbf{Backtracking attack} that we'll discuss on the \textit{Preliminaries} section. 
+
+As mentioned in \textit{Overview}, there is another schema based on multilinear maps proposed in \cite{gghsw} that solves this problem but seems to be complicated to put this into practice because the current model of multilinear maps(see \cite{ggh}) was proven that can be broken using the \textbf{Annihilation attacks} proposed in \cite{msz}. Until another multilinear maps valid candidate implementation is proposed, using multilinear maps can cause problems and currently are unsafe.
+
+Even though the \cite{fltccd} schema uses just one bilinear map it is more efficient than the one in \cite{gghsw} if the boolean circuits do not have Fan-Out gates connected between them by paths. These Fan-Out gates are needed to make this schema resistant to the \textbf{Backtracking attack}. As result, during the \textit{share} procedure, the key components can be increase exponentially based on the number of the chained Fan-Out gates.
+
+Other related works that were used for this paper writing were based on the \textbf{Secret Share Schemas(SSS)} because when using the \textit{threshold gates - (k, N)} it is needed to divide some key information \textit{I} in \textit{N} pieces and allow it to be reconstructed \textit{if and only if} at least \textit{k} pieces of shared information are knowed. This problem have lived for a long time and it has a solution based on \textbf{Lagrange interpolation} proposed by \textit{Adi Shamir} in \cite{shamir} that we inspired from also in this paper. Another secret sharing schemes proposed were by \textit{Blakley} in \cite{blakley}, by \textit{Brickell} in \cite{brickell} and by \textit{M. Ito, A. Saito, and T. Nishizeki} in \cite{isn}.
+
+\subsubsection{Implementation}
+
+The implementation related works are based on the \textbf{Pairing-Based Cryptography(PBC) Library}\cite{pbc} that is a C library based on the GMP library\cite{gmp}. What this paper uses though is the \textbf{Java Pairing-Based Cryptography(jPBC) Library}\cite{jpbc} that provides a wrapper over the \textbf{PBC} library. 
+
+The current implementations(related to ABE) that the author of the \textbf{jPBC} library provides are for the \textit{Attribute-Based Encryption for Circuits from Multilinear Maps}\cite{gghsw} schema and for the \textit{How to Compress (Reusable) Garbled Circuits}\cite{gghvv} model. These implementations were the starting point for the implementation proposed in this paper and we tried to preserve the general structure of the implementation according to schemas already implemented(defined using \textit{Bouncy Castle Library}\cite{bc}).
+
 \section{Preliminaries}
-\subsection{Definitions}
+
+In this section we'll be talking about the terminology and the notations used by this paper and also, where is the case, we'll describe the primitives that can be used with the \textbf{jPBC} library to perform some of these operations.  
+
+\subsection{Cryptographic schemes}
+
+\subsection{Identity based Cryptography}
+
+The \textit{Identity based Cryptography} represents an extension of the classic \textit{public-key cryptography} where the public-key is represented by some distinctive public information like the email address, phone number or some personal identification number.
+
+This paradigm was first proposed by \textbf{Adi Shamir} in \cite{shamirid}(1984) and it took sixteen years until it found its first implementations in \cite{sok}(2000) and \cite{bf}(2001). This delay was caused by the need of having a private key generator entity that manages the actual public/private key pairs in the system. 
+
+\subsection{Attribute based Encryption}
+
+The \textit{Attribute based Encryption} is a relatively recent way of thinking about cryptograpy that has its roots in \textit{asymmetric cryptography} and in \textit{identity criptography}. Basically what this idea brings forward is that instead of having a \textbf{private key} that authenthicates a specific user(in public key systems) or an email(for example in identity based systems) you're having a set \textit{A} of attributes from a universal set of attributes $U$ that can allow you to access the resources of a system. 
+
+This paradigm is especially suited in access control systems like \textit{operating systems} or \textit{Cloud access management systems}(see: IAM services from Amazon Web Services or Google Cloud) where every entity in that system is given a the set of attributes that we've been talking above and using them with \textit{boolean circuits}(see the below section for more details) for defining the rules of the access control system it generates the encryption/decryption key needed for the resources of the system.  
+
+Currently there are two ways of using the Attribute based Encryption: the \textit{Key-Policy Attribute based Encryption}(KP-ABE) and \textit{Cipher-Policy Attribute based Encryption} that we'll detail in the next section. Both of these policies use boolean circuits for defining the access structure based on the attributes and the difference comes from the way they decide to generate the key pair for a message.
+
+\subsection{Key-Policy and Cipher-Policy Attribute based Encryption}
+
+\begin{itemize}
+  \item \textit{Key-Policy Attribute based Encryption}
+  \item \textit{Cipher-Policy Attribute based Encryption}
+\end{itemize}
+
+\subsection{Bilinear maps}
+\subsection{Boolean circuits}
+\subsubsection{Theshold gates}
+\subsubsection{Example}
+\subsection{The backtracking attack}
+\subsection{Decisional Diffie–Hellman assumption}
+\subsection{Adi Shamir's secret sharing model}
 
 \section{Extension for the KP-ABE schema based on bilinear maps using boolean circuits with threshold gates}
 
@@ -112,10 +167,78 @@ Sanjam Garg, Craig Gentry, Shai Halevi, Amit Sahai, Brent Waters
 \bibitem{gpsw} 
 Vipul Goyal, Omkant Pandey, Amit Sahai, Brent Waters 
 \textit{Attribute-Based Encryption for Fine-Grained Access Control of Encrypted Data}, 2006
- 
+
+\bibitem{ggh}
+Sanjam Garg, Craig Gentry, Shai Halevi
+\textit{Candidate Multilinear Maps from Ideal Lattices}, 2012
+
+\bibitem{msz}
+Eric Miles, Amit Sahai, Mark Zhandry
+\textit{Annihilation Attacks for Multilinear Maps:Cryptanalysis of Indistinguishability Obfuscation over GGH13}, 2016
+
+\bibitem{shamir}
+Adi Shamir
+\textit{How to Share a Secret}, 1979
+
+\bibitem{blakley}
+G. R. Blakley
+\textit{Safeguarding cryptographic keys}, 1899
+
+\bibitem{brickell}
+E. F. Brickell
+\textit{Some ideal secret sharing schemes. Journal of Combinatorial Mathematics and Combinatorial Computing}, 1989
+
+\bibitem{isn}
+M. Ito, A. Saito, and T. Nishizeki
+\textit{Secret Sharing Scheme Realizing General Access Structure}, 1987
+
+\bibitem{jpbc}
+Angelo {De Caro} and Vincenzo Iovino
+\textit{jPBC: Java pairing based cryptography Library}, 2011
+
+\bibitem{pbc}
+Ben Lynn
+\textit{Pairing based cryptography library}
+
+\bibitem{gmp}
+\href{https://gmplib.org/\#WHAT}{https://gmplib.org/\#WHAT}
+\textit{The GNU Multiple Precision Arithmetic Library}
+
+\bibitem{bc}
+\href{https://www.bouncycastle.org/about.html}{https://www.bouncycastle.org/about.html}
+\textit{The Legion of the Bouncy Castle}
+
+\bibitem{gghvv}
+Craig Gentry, Sergey Gorbunov, Shai Halevi, Vinod Vaikuntanathan, Dhinakaran Vinayagamurthy
+\textit{How to Compress (Reusable) Garbled Circuits}, 2013
+
+\bibitem{gghvv}
+Craig Gentry, Sergey Gorbunov, Shai Halevi, Vinod Vaikuntanathan, Dhinakaran Vinayagamurthy
+\textit{How to Compress (Reusable) Garbled Circuits}, 2013
+
+\bibitem{shamirid}
+Adi Shamir
+\textit{Identity-Based Cryptosystems and Signature Schemes}, 1984 
+
+\bibitem{sok}
+Sakai R., Ohgishi K., Kasahara M.
+\textit{Cryptosystems based on pairings}, 2000 
+
+\bibitem{bf}
+Dan Boneh, Matt Franklin
+\textit{Identity-based encryption from the Weil pairing}, 2001
+
+\bibitem{idwiki}
+\href{https://en.wikipedia.org/wiki/ID-based_encryption}{https://en.wikipedia.org/wiki/ID-based\_encryption}
+
+\bibitem{abecryptostack}
+\href{https://crypto.stackexchange.com/questions/17893/what-is-attribute-based-encryption?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa}{https://crypto.stackexchange.com/questions/17893/}
+
+\bibitem{abewiki}
+\href{https://en.wikipedia.org/wiki/Attribute-based_encryption}{https://en.wikipedia.org/wiki/Attribute-based\_encryption}
+
 \end{thebibliography}
 
 \vspace{\baselineskip}
-
 
 \end{document}
