@@ -157,7 +157,7 @@ Currently there are two ways of using the Attribute based Encryption: the \texti
   \begin{center}
   	\begin{figure}[htpb]
     \centering
-    \includegraphics[width=\textwidth,height=7cm,keepaspectratio=true]{figures/KP-ABE.JPG}
+    \includegraphics[width=\textwidth,height=5cm,keepaspectratio=true]{figures/KP-ABE.JPG}
     \caption{
         Key-Policy Attribute based Encryption visual representation from \cite{ka}
     }
@@ -169,7 +169,7 @@ Currently there are two ways of using the Attribute based Encryption: the \texti
   \begin{center}
   	\begin{figure}[htpb]
     \centering
-    \includegraphics[width=\textwidth,height=7cm,keepaspectratio=true]{figures/CP-ABE.JPG}
+    \includegraphics[width=\textwidth,height=5cm,keepaspectratio=true]{figures/CP-ABE.JPG}
     \caption{
         Cipher-Policy Attribute based Encryption visual representation from \cite{ka}
     }
@@ -290,7 +290,57 @@ circuit = new DefaultCircuit(n, q, 3, new DefaultGate[]{
 
 \subsection{The Backtracking Attack}
 
+The \textit{Backtracking Attack} was first proposed in \cite{gghsw} and it is the reason why the \cite{gpsw} schema is not applicable to monotone boolean circuits that have a fanout greater than one. In the \cite{gghsw} it was proven that by using an unathorized set of input attributes for a access structure you can generate the decryption key by exploiting the way that the schema uses the \textit{OR} gates for the \textit{key generation} phase.
 
+The problem comes from the fact that in the \textit{key-generation} phase (that is executed top-down) the output value of a \textit{OR} gate $G$ is propagated to both of its inputs unchanged. In the \textit{decryption} phase (that is executed bottom-up) it check if the inputs of $G$ are defined and if at least one of them is defined, then the decryptor also knows the other input's value and if that other gate has a fan out greater than one, it can be used to gain access using an unauthorized set of attributes.
+
+\subsubsection{Example}
+
+In this section we'll show how the \textit{share} and \textit{reconstruction} phases work for \textit{OR} gates and how the \textit{Backtracking attack} takes advatage of this construction for the gates that have a fan out greater than one.
+
+In \textit{Figure 4} is shown that for a \textit{OR} gate, the \textit{share} phase (the boolean circuit is traversed top-down) leaves the output value of the gate unchanged and propagates it to the inputs. 
+
+\begin{center}
+	\begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth,height=4cm,keepaspectratio=true]{figures/shareOR.jpg}
+\caption{
+	The share procedure for a OR gate.
+}
+\end{figure}
+\end{center}
+
+In \textit{Figure 5} it is shown the \textit{reconstruction} (the boolean circuit is traversed bottom-up) procedure for a \textit{OR} gate. In this example, the authorized attribute (or the user has attribute associated with this gate) is the \textit{INPUT 1} while the \textit{INPUT 2} is unauthorized (or the user does not have that attribute/secret). The \textit{reconstruction} phase looks if at least one of its input value is known, in our example the value of \textit{INPUT 1} is known and then propagates this value to the output of the \textit{OR} gate. From the way that the \textit{share} procedure is constructed for the \textit{OR} gate, it is sure that the other value of the input must be the same as the value of the \textit{INPUT 1}, thus an attacker can discover the value of the attribute associated with \textit{INPUT 2}.
+
+\begin{center}
+	\begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth,height=5cm,keepaspectratio=true]{figures/reconstructOR.jpg}
+\caption{
+    The reconstruction phase for a OR gate.
+}
+\end{figure}
+\end{center}
+
+In \textit{Figure 6} it is shown the \textit{Backtracking attack}. The authorized inputs are the \textit{INPUT 1} and \textit{INPUT 3}, but in order to obtain the decryption key we also need the \textit{INPUT 2}. In order to gain the decryption key an attacker can do the following: he observes the \textit{OR} gate and as he knows that in the \textit{share} procedure the same value was passed to \textit{INPUT 1} and \textit{INPUT 2} he can mock the \textit{INPUT 2} value as the same as for \textit{INPUT 1} and the use it to get the value of the \textit{AND} gates since the value of the \textit{INPUT 3} is known and this way he can obtain the decryption key associated with this boolean circuit. As mentioned above, this is only possible because the \textit{INPUT 2} gate has a fan-out of two and he can use the advantage that he discovered to the \textit{AND} gate that is connected to the \textit{INPUT 2} gate.
+
+\begin{center}
+	\begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth,height=10cm,keepaspectratio=true]{figures/BacktrackingAttack.jpg}
+\caption{
+    The backtracking attack. \cite{gghsw}
+}
+\end{figure}
+\end{center}
+
+\subsubsection{Solutions}
+
+The current solutions that thwart the \textit{Backtracking attack} are based on \textit{multilinear maps} and by using explicit \textit{Fan-Out} gates. 
+
+The solution based on leveled multilinear maps was proposed in \cite{gghsw} that uses a $k + 1$(where $k$ is the depth of the boolean circuit) multiplicative cyclic groups of prime order $p$ $G_1, G_2, ... G_k, G_{k+1}$ and bilinear maps over these groups in order to generate the attribute secrets and the decryption key from a level of the boolean circuit to another. This way the \textit{backtracking attack} is not possible but it is proves to be difficult to implement this since the current implementations of the multilinear maps are not secure. 
+
+The other solution proposed in \cite{fltccd} uses explicit \textit{Fan-Out} gates that have at least one output wire and exactly one input wire. In the proposed schema the \textit{sharing} procedure merges the outputs into a list for the input and also uses another additional list that is used in the reconstruction phase in order to build the desired secrets. This construction is a more efficient that the one in \cite{gghsw} if there are no chained \textit{FO} gates in the circuit paths because it uses only one bilinear map, but otherwise the list increase exponentially increasing the complexity of the schema. Also, this schema is more suitable in practice because it uses bilinear maps that can be implemented based on the known schemas and these constructions are known so far as being safe.
 
 \subsection{Adi Shamir's secret sharing algorithm}
 
