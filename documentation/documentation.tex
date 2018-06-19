@@ -8,6 +8,9 @@
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathabx}
 \lstset{
    basicstyle=\fontsize{9}{10}\selectfont\ttfamily
 }
@@ -22,6 +25,7 @@
 \usepackage{sectsty}
 \usepackage[explicit]{titlesec}
 
+\newtheorem{theorem}{Theorem}
 
 \allsectionsfont{\raggedright}
 
@@ -340,7 +344,7 @@ The current solutions that thwart the \textit{Backtracking attack} are based on 
 
 The solution based on leveled multilinear maps was proposed in \cite{gghsw} that uses a $k + 1$(where $k$ is the depth of the boolean circuit) multiplicative cyclic groups of prime order $p$ $G_1, G_2, ... G_k, G_{k+1}$ and bilinear maps over these groups in order to generate the attribute secrets and the decryption key from a level of the boolean circuit to another. This way the \textit{backtracking attack} is not possible but it is proves to be difficult to implement this since the current implementations of the multilinear maps are not secure. 
 
-The other solution proposed in \cite{fltccd} uses explicit \textit{Fan-Out} gates that have at least one output wire and exactly one input wire. In the proposed schema the \textit{sharing} procedure merges the outputs into a list for the input and also uses another additional list that is used in the reconstruction phase in order to build the desired secrets. This construction is a more efficient that the one in \cite{gghsw} if there are no chained \textit{FO} gates in the circuit paths because it uses only one bilinear map, but otherwise the list increase exponentially increasing the complexity of the schema. Also, this schema is more suitable in practice because it uses bilinear maps that can be implemented based on the known schemas and these constructions are known so far as being safe.
+The other solution proposed in \cite{fltccd} uses explicit \textit{Fan-Out} gates that have at least one output wire and exactly one input wire. In the proposed schema the \textit{sharing} procedure merges the outputs into a list for the input and also uses another additional list that is used in the reconstruction phase in order to build the desired secrets. This construction is a more efficient that the one in \cite{gghsw} if there are no chained \textit{FO} gates in the circuit paths because it uses only one bilinear map, but otherwise the list increase exponentially increasing the complexity of the schema. Also, this schema is more suitable in practice because it uses bilinear maps that can be implemented based on the known schemas and these constructions are known as being safe so far.
 
 \subsection{Adi Shamir's secret sharing algorithm}
 
@@ -364,11 +368,126 @@ This method can be used with the $S_{i_1}, S_{i_2}, ..., S_{i_k}$ from the Shami
 
 \section{Extension for the KP-ABE schema based on bilinear maps using boolean circuits with threshold gates}
 
+In this section we present an extension to the current \textit{Key-Policy Attribute based encryption} schema proposed in \cite{fltccd} by defining new \textit{share} and \textit{reconstruction} procedures for boolean circuits with \textbf{threshold gates (k, N)}. This extension was mentioned in the \cite{fltccd} paper, it was proved that threshold gates are suited for this schema, but this extension was not formally defined and analysed. Our extension is important because it allows creating access structures more flexible and expressive than the classical boolean circuits with \textit{OR} and \textit{AND} gates. Also, using threshold gates seems to be more natural than using classical gates when designing access structures for access control systems.
+
+This section also details the security proof of our extension and the implementation using \textbf{jPBC} of the \cite{fltccd} schema with our contribution. 
+
 \subsection{Proposed schema}
 
+To define our extension we'll rewrite the schema proposed in \cite{fltccd} paper and adapt it where it is necessary for threshold gates.
+
 \subsubsection{Description}
-\subsubsection{Correctness}
-\subsubsection{Complexity}
+
+Let $eval$ be a function that takes as input a set of gate types $T$, a input array corresponding to the gate input, and returns an array of boolean values corresponding to the output values of the gate.
+
+In our construction $T = \{(k, N) \textrm{ threshold gates }, FO \textrm{ gates}\}$ and the $eval$ function over these gates is defined as it follows:
+
+\begin{itemize}
+ 	\item \textit{threshold gates ($k$, $N$)}: where $N$ is the number of input values $I = I_1, I_2, ...I_n$ of the gate and $k$ the number of inputs that \textbf{must} be evaluated to $true$ in order to evaluate the gate as true. Thus, $eval((k, N) \textrm{ threshold gate }, I) = [true]$ \textit{if and only if} $\exists I_{i_1}, I_{i_2}, ..., I_{i_k} \subseteq I, $ with the property that $\forall j \in {1, 2, ...k}, I_{i_j} = true$. Otherwise, $eval((k, N) \textrm{ threshold gate }, I) = [false]$.
+
+ 	\item \textit{Fan-Out (FO) gates}: takes as input a value $I$ ($true$ or $false$) and has $n$ outputs $O = O_1, O_2, ... O_n$. This gate propagates its input to the outputs as follows: $eval(FO, I) = [I, I, ...I]$ ($n$ times) corresponding to the values assigned to the $O$ outputs array.
+\end{itemize}
+
+This function can be used to evaluate the boolean circuits value and see if given a set of attributes, the decryptor can obtain the decryption key, but this function is not used in the schema algorithm.
+
+We denote by $wire_{index}$ the wires that connect the gates. These wire indexes are assigned before the decryption phase and comes with the boolean circuit structure. These wires are indexed bottom-up from left to right for each boolean circuit level.
+
+\paragraph{Schema definition}
+
+\begin{enumerate}
+	\item \textit{Setup($\lambda$, n)}: this procedure chooses a parameter $p$ using $\lambda$, $G_1$ and $G_2$ two multiplicative cyclic groups of prime order $p$, $g$ (any element from $G_1$ except zero or one elements) a generator for $G_1$, a bilinear map $e : G_1 \bigtimes G_1 \rightarrow G_2$, $y \in \mathbb{Z}_p$ and for each $i \in {1, 2, ...,n}$ $t_i \in \mathbb{Z}_p$ and outputs the following structures:
+
+	$$PublicParameters = (p, G_1, G_2, g, e, n, e(g, g)^y, \{g^{t_i} | i \in \{1, 2, ..., n\}\})$$
+
+	$$MasterKey = (y, \{t_1, t_2, ..., t_n\})$$
+
+	\item \textit{Encrypt(m, A, PublicParameters)}: this procedure encrypts the message $m$ with attributes $A \in {1, 2, ..., n}$ chooses a random $s \in \mathbb{Z_p}$ and outputs the structure:
+
+	$$EncryptionResult = (A, ciphertext = m * e(g, g)^{ys}, g^s, \{g_{t_i * s} | i \in U\})$$
+
+	\item \textit{KeyGen(C, MasterKey)}: takes as input the boolean circuit $C$ (with $n$ attribute inputs) associated with the user that wants to obtain the decryption key for $m$. The procedure does the following:
+		$$(S, P) = Share(y, C)$$
+		$$D = (P, \{g^{S(wire_i)[j] / t_i} | i \in \{1, 2, ..., n\} \textrm{ and } j \in \{1, 2, ... |S(i)|\}\})$$
+
+		\begin{itemize}
+			\item \textit{Share($y$, $C$)}
+			\begin{itemize}
+				\item let $M$ = $[unmarked, \forall \textrm{ gate} \in C]$ $\rightarrow$ Mark all the gates as $unmarked$
+				\item let $o$ = $C.root()$ $\rightarrow$ Extract the root of the boolean circuit
+				\item $S(o) = [y] \rightarrow$ Assign to the root an array with the y value   
+				\item \textit{for each gate} $\tau \in C$ (top-down order) do the followings:
+				\begin{itemize}
+				    \item if $M(\tau) == unmarked$ and $\tau$ is \textbf{threshold gate $(k, m)$} with $w$ output and $m$ inputs $w_1, w_2, ..., w_m$, then for each $i \in \{1, ...,|S(w)|\}$ do the followings:
+				        \begin{enumerate}
+				            \item choose uniformly random $a_1, a_2, ..., a_{k - 1} \in \mathbb{Z}_p$ and let $p(x) = S(w)[i] + a_1 * x + a_2 * x^2 + ... + a_{k-1} * x^{k - 1}$ the associated polynomial from the \textit{Shamir's secret sharing} procedure
+				            \item $S(w_q).append(p(q))$ for all $q \in {1, 2, ...m}$  
+				        \end{enumerate}
+				    \item if $M(\tau) == unmarked$ and $\tau$ is $FO$ gate with input $w$ and $m$ outputs $w_1, w_2, ..., w_m$ then $M(\tau) = marked$ and for each $i \in \{1, 2, ..., m\}$ do the followings:
+				    \begin{itemize}
+				        \item for each $k \in \{1, ..., |S(w_i)|\}$ do the followings:
+				        \begin{enumerate}
+				            \item choose uniformly random $a_k \in \mathbb{Z}_p$ and compute $b_k \ \in \mathbb{Z}_p$ such that $(a_k + b_k) \textrm{ mod } p = S(w_i)[k]$
+				            \item append $a_k$ to $S(w)$
+				            \item append $g^{b_k}$ to $P(w_k)$
+				        \end{enumerate}
+				    \end{itemize}
+				    
+				\end{itemize} 
+			\end{itemize}
+		\end{itemize}
+	\item \textit{Decrypt(EncryptionResult, D)}: takes as input the \textit{encryption} result and the \textit{key generation} result and  for $i \in {1, 2, ...,n}$ and $j \in {1, 2, ..., |S(wire_i)|}$ does the following:
+        \[   
+        V_A(i,j) = 
+             \begin{cases}
+               e(g^{t_i*s}, g^{S(wire_i)[j] / t_i}) = e(g, g) ^{ S(wire_i)[j]*s}  &\quad\text{if } i \in A\\
+               \text{null,} &\quad \text{if } i \in U \setminus A \\
+             \end{cases}
+        \]
+
+        $$R = Reconstruct(C, P, V_A, g^s)$$
+        $$m = ciphertext / R(o)[1] \textrm{ where o is the root of the circuit }$$
+        
+		\begin{itemize}
+			\item $Reconstruct(C, P, V_A, g^s)$
+			\begin{itemize}
+				\item let $M$ = $[unmarked, \forall \textrm{ gate} \in C]$ $\rightarrow$ Mark all the gates as $unmarked$
+				\item $R(i) = V_A(i)$ for $i \in \{1, 2, ...n\}$
+				\item \textit{for each gate} $\tau \in C$ (bottom-up order) do the followings:
+				\begin{itemize}
+				    \item if $M(\tau) == unmarked$ and $\tau$ is \textbf{threshold gate $(k, m)$} with $w$ output and $m$ inputs $w_1, w_2, ..., w_m$, assert that $|R(w_1)| = |R(w_2)| = ... = |R(w_m)|$ and let $len = |R(w_1)|$ and for each $i \in \{1, ..., len\}$ do the followings:
+				    \begin{enumerate}
+				        \item choose randomly $B_{i_1}, ..., B_{i_k}$ values from 
+				        
+				        $R(w_1)[i], R(w_2)[i], ..., R(w_m)[i]$, such that $B_{i_j} != null, \forall j \in \{1, ..., k\}$ and $i_1, ..., i_k$ represent the indexes of the non-null value gates; if the choosing fails (not enough non-null values) $R(w)[i] = null$ and continue with another $i$
+				        \item compute for all $j \in \{1, ..., k\}$: $$L(j) = \prod_{jj \neq j, jj = 1}^{k}(\frac{0 - i_{jj}}{i_j - i_{jj}})$$ 
+				        \item $$R_w = \prod_{j = 1}^{k} (B_{i_j} ^{L(j)})$$
+				        \item $R(w).append(R_w)$
+				    \end{enumerate}
+				    \item if $M(\tau) == unmarked$ and $\tau$ is $FO$ gate with input $w$ and $m$ outputs $w_1, w_2, ..., w_m$ then $M(\tau) = marked$:
+				    \begin{enumerate}
+				        \item split $R(w)$ into  $m$ lists $R_{w_1}, ...,R_{w_m}$ such that $|R_{wire_i}| = |P(wire_i)|, i \in {1, 2, ..., m}$
+				        \item $R(w_i).append(R_{w_i}[j] * e(P(w_i)[j], g^s)), i \in \{1, 2, ..., m\}, j \in \{1, 2, ...,|R_{w_i}|\}$ 
+				    \end{enumerate}
+				\end{itemize}
+			\end{itemize}
+		\end{itemize}
+\end{enumerate}
+
+\subsubsection{Correctness of extension}
+
+\begin{theorem}
+The \textit{Key-Policy Attribute based Encryption} scheme proposed above with the extension of threshold gates over boolean circuits satisfies the correctness property.
+\end{theorem}
+
+In this paper we'll discuss the correctness of our extension with \textit{threshold} gates over the schema in \cite{fltccd} assuming that the whole schema was already proven as being correct. Thus, in this section we'll prove that  
+
+\begin{proof}
+
+
+
+\end{proof}
+
+\subsubsection{Complexity of extension}
 
 \subsection{Security proof}
 
