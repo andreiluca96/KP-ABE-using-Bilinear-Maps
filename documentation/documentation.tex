@@ -1,15 +1,22 @@
 \documentclass[12pt]{article}
 \usepackage[english]{babel}
 \usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc} % or \usepackage[utf8x]{inputenc} for mor characters
+\usepackage[utf8]{inputenc} % or \usepackage[utf8x]{inputenc} for more characters
 \usepackage{eurosym}
 \usepackage{textcomp}
 \usepackage{afterpage}
 \usepackage{hyperref}
+\usepackage{xcolor}
 \usepackage{listings}
+\usepackage{xparse}
+\NewDocumentCommand{\codeword}{v}{%
+\texttt{\textcolor{blue}{#1}}%
+}
+\lstset{language=java,keywordstyle={\bfseries}}
 \usepackage{amsfonts}
 \usepackage{amsmath}
 \usepackage{amsthm}
+\usepackage[left=3cm, right=3cm, top=3.5cm, bottom=3.5cm]{geometry}
 \usepackage{mathabx}
 \lstset{
    basicstyle=\fontsize{9}{10}\selectfont\ttfamily
@@ -82,7 +89,7 @@ UNIVERSITY OF "ALEXANDRU IOAN CUZA" IAȘI
 
 \subsection{Overview}
 
-The \textit{Attribute based Encryption} field has been growing during the past years, but still lots of its' problems  remain unsolved, for example the \textit{Key-Policy Attribute based Encryption} proposed in \cite{gpsw} was successfully attacked using the \textbf{Backtracking attack} proposed in \cite{gghsw}. The same paper proposed a new schema to solve this problem based on multilinear maps, but this causes problems on the actual implementation of the schema, because at his moment, we don't have a proper way of generating these multilinear maps that preserves the security correctness. In this context, \cite{fltccd} paper proposed a new \textit{Key-Policy Attribute based Encryption} schema based on bilinear maps that thwarts the \textbf{Backtracking attack} but introduces another level of complixity by using \textbf{FO(Fan-Out) gates} for the boolean circuits. 
+The \textit{Attribute based Encryption} field has been growing during the past years, but still lots of its problems  remain unsolved, for example the \textit{Key-Policy Attribute based Encryption} proposed in \cite{gpsw} was successfully attacked using the \textbf{Backtracking attack} proposed in \cite{gghsw}. The same paper proposed a new schema to solve this problem based on multilinear maps, but this causes problems on the actual implementation of the schema, because at his moment, we don't have a proper way of generating these multilinear maps that preserves the security correctness. In this context, \cite{fltccd} paper proposed a new \textit{Key-Policy Attribute based Encryption} schema based on bilinear maps that thwarts the \textbf{Backtracking attack} but introduces another level of complixity by using \textbf{FO(Fan-Out) gates} for the boolean circuits. 
 
 This paper introduces an extension and the first implementation of the schema proposed in \cite{fltccd}. First of all, the extension puts forward a new way of defining the boolean circuits used for key construction by using threshold gates providing this way a more flexible construction of the boolean circuits. Second of all, the implementation is made in Java and uses the \textbf{Java Pairing-Based Cryptography Library} that provides an implementation of bilinear maps and operations on its elements and the \textbf{Bouncy Castle Library} for defining the cryptographic structures.
 
@@ -111,8 +118,6 @@ The current implementations(related to ABE) that the author of the \textbf{jPBC}
 \section{Preliminaries}
 
 In this section we'll be talking about the terminology and the notations used by this paper and also, where is the case, we'll describe the primitives that can be used with the \textbf{jPBC} library to perform some of these operations.  
-
-\subsection{Cryptographic schemes}
 
 \subsection{Identity based Cryptography}
 
@@ -331,7 +336,7 @@ In \textit{Figure 6} it is shown the \textit{Backtracking attack}. The authorize
 \begin{center}
 	\begin{figure}[htpb]
 \centering
-\includegraphics[width=\textwidth,height=10cm,keepaspectratio=true]{figures/BacktrackingAttack.jpg}
+\includegraphics[width=\textwidth,height=8cm,keepaspectratio=true]{figures/BacktrackingAttack.jpg}
 \caption{
     The backtracking attack. \cite{gghsw}
 }
@@ -352,7 +357,7 @@ The Shamir's secret sharing procedure was proposed first on \cite{shamir}(1979) 
 
 \subsubsection{Algorithm}
 
-Let $S$ be a number representing secret that has to be shared, $k$ be the number of entities required for the secret reconstruction and $N$ the total number of entities. To divide $S$ into $N$ pieces $S_1, S_2, ..., S_N$ the algorithm picks a random polynomial $p(x) = a_0 + a_1 * x + ... + a_{k - 1} * x^{k - 1}$ of $k - 1$ degree where $a_0$ represents $S$ (notice that $a_1, ..., a_{k - 1}$ must be random generated numbers) and then assign to each $S_i = p(i), \forall i = {1, 2, ... n}$.
+Let $S$ be a number representing secret that has to be shared, $k$ be the number of entities required for the secret reconstruction and $N$ the total number of entities. To divide $S$ into $N$ pieces $S_1, S_2, ..., S_N$ the algorithm picks a random polynomial $p(x) = a_0 + a_1 \cdot x + ... + a_{k - 1} \cdot x^{k - 1}$ of $k - 1$ degree where $a_0$ represents $S$ (notice that $a_1, ..., a_{k - 1}$ must be random generated numbers) and then assign to each $S_i = p(i), \forall i = {1, 2, ... n}$.
 
 In order to reconstruct the secret $S$ one has to know at least $k$ values of this polynomial and apply a interpolation algorithm in order to discover the $p(0)$ value and thus the $S$ value. The correctness comes from the sharing phase where for any $k$ values in a \textit{Euclidian space} there exists a unique polynomial of degree $k - 1$ that is discovered using the interpolation algorithm.
 
@@ -360,11 +365,13 @@ In order to reconstruct the secret $S$ one has to know at least $k$ values of th
 
 The \textbf{Lagrange polynomial} is used in \textit{computer science} and \textit{numerical analysis} as a interpolation technique that aproximates the lowest degree polynomial that satisfies the constraint that all the given points for interpolation are exactly matched by the output of this polynomial.
 
-\textbf{Algorithm:} given a set of entries $(x_1, y_1), (x_2, y_2), ..., (x_n, y_n) \in \mathbb{R}^2$ the value of the Lagrange polynomial of degree $n$ in $x$ is given by the formula:
+\textbf{Algorithm:} given a set of entries $(x_0, y_0),(x_1, y_1), (x_2, y_2), ..., (x_n, y_n) \in \mathbb{R}^2$ the value of the Lagrange polynomial of degree $n$ in $x$ is given by the formula:
 
 $$L^n(x) = \sum_{i = 0}^n(y_i\prod_{j \neq i, j = 0}^n \frac{x - x_j}{x_i - x_j})$$
 
 This method can be used with the $S_{i_1}, S_{i_2}, ..., S_{i_k}$ from the Shamir secret sharing algorithm in order to compute the value $p(0)$ of the random generated polynomial and thus achieving the secret $S$.
+
+\vspace{200mm}
 
 \section{Extension for the KP-ABE schema based on bilinear maps using boolean circuits with threshold gates}
 
@@ -390,7 +397,7 @@ In our construction $T = \{(k, N) \textrm{ threshold gates }, FO \textrm{ gates}
 
 This function can be used to evaluate the boolean circuits value and see if given a set of attributes, the decryptor can obtain the decryption key, but this function is not used in the schema algorithm.
 
-We denote by $wire_{index}$ the wires that connect the gates. These wire indexes are assigned before the decryption phase and comes with the boolean circuit structure. These wires are indexed bottom-up from left to right for each boolean circuit level.
+We denote by $wire_{index}$ the wires that connect the gates. These wire indexes are assigned before the decryption phase and comes with the boolean circuit structure. These wires are indexed top-up from left to right for each boolean circuit level.
 
 \paragraph{Schema definition}
 
@@ -403,7 +410,7 @@ We denote by $wire_{index}$ the wires that connect the gates. These wire indexes
 
 	\item \textit{Encrypt(m, A, PublicParameters)}: this procedure encrypts the message $m$ with attributes $A \in {1, 2, ..., n}$ chooses a random $s \in \mathbb{Z_p}$ and outputs the structure:
 
-	$$EncryptionResult = (A, ciphertext = m * e(g, g)^{ys}, g^s, \{g_{t_i * s} | i \in U\})$$
+	$$EncryptionResult = (A, ciphertext = m \cdot e(g, g)^{ys}, g^s, \{g^{t_i \cdot s} | i \in A\})$$
 
 	\item \textit{KeyGen(C, MasterKey)}: takes as input the boolean circuit $C$ (with $n$ attribute inputs) associated with the user that wants to obtain the decryption key for $m$. The procedure does the following:
 		$$(S, P) = Share(y, C)$$
@@ -417,9 +424,9 @@ We denote by $wire_{index}$ the wires that connect the gates. These wire indexes
 				\item $S(o) = [y] \rightarrow$ Assign to the root an array with the y value   
 				\item \textit{for each gate} $\tau \in C$ (top-down order) do the followings:
 				\begin{itemize}
-				    \item if $M(\tau) == unmarked$ and $\tau$ is \textbf{threshold gate $(k, m)$} with $w$ output and $m$ inputs $w_1, w_2, ..., w_m$, then for each $i \in \{1, ...,|S(w)|\}$ do the followings:
+				    \item if $M(\tau) == unmarked$ and $\tau$ is \textbf{threshold gate $(k, m)$} with $w$ output and $m$ inputs $w_1, w_2, ..., w_m$, then $M(\tau) = marked$ and for each $i \in \{1, ...,|S(w)|\}$ do the followings:
 				        \begin{enumerate}
-				            \item choose uniformly random $a_1, a_2, ..., a_{k - 1} \in \mathbb{Z}_p$ and let $p(x) = S(w)[i] + a_1 * x + a_2 * x^2 + ... + a_{k-1} * x^{k - 1}$ the associated polynomial from the \textit{Shamir's secret sharing} procedure
+				            \item choose uniformly random $a_1, a_2, ..., a_{k - 1} \in \mathbb{Z}_p$ and let $p(x) = S(w)[i] + a_1 \cdot x + a_2 \cdot x^2 + ... + a_{k-1} \cdot x^{k - 1}$ the associated polynomial from the \textit{Shamir's secret sharing} procedure
 				            \item $S(w_q).append(p(q))$ for all $q \in {1, 2, ...m}$  
 				        \end{enumerate}
 				    \item if $M(\tau) == unmarked$ and $\tau$ is $FO$ gate with input $w$ and $m$ outputs $w_1, w_2, ..., w_m$ then $M(\tau) = marked$ and for each $i \in \{1, 2, ..., m\}$ do the followings:
@@ -439,7 +446,7 @@ We denote by $wire_{index}$ the wires that connect the gates. These wire indexes
         \[   
         V_A(i,j) = 
              \begin{cases}
-               e(g^{t_i*s}, g^{S(wire_i)[j] / t_i}) = e(g, g) ^{ S(wire_i)[j]*s}  &\quad\text{if } i \in A\\
+               e(g^{t_i\cdots}, g^{S(wire_i)[j] / t_i}) = e(g, g) ^{ S(wire_i)[j]\cdots}  &\quad\text{if } i \in A\\
                \text{null,} &\quad \text{if } i \in U \setminus A \\
              \end{cases}
         \]
@@ -454,7 +461,7 @@ We denote by $wire_{index}$ the wires that connect the gates. These wire indexes
 				\item $R(i) = V_A(i)$ for $i \in \{1, 2, ...n\}$
 				\item \textit{for each gate} $\tau \in C$ (bottom-up order) do the followings:
 				\begin{itemize}
-				    \item if $M(\tau) == unmarked$ and $\tau$ is \textbf{threshold gate $(k, m)$} with $w$ output and $m$ inputs $w_1, w_2, ..., w_m$, assert that $|R(w_1)| = |R(w_2)| = ... = |R(w_m)|$ and let $len = |R(w_1)|$ and for each $i \in \{1, ..., len\}$ do the followings:
+				    \item if $M(\tau) == unmarked$ and $\tau$ is \textbf{threshold gate $(k, m)$} with $w$ output and $m$ inputs $w_1, w_2, ..., w_m$, assert that $|R(w_1)| = |R(w_2)| = ... = |R(w_m)|$ and let $len = |R(w_1)|$, $M(\tau) = marked$ and for each $i \in \{1, ..., len\}$ do the followings:
 				    \begin{enumerate}
 				        \item choose randomly $B_{i_1}, ..., B_{i_k}$ values from 
 				        
@@ -463,37 +470,740 @@ We denote by $wire_{index}$ the wires that connect the gates. These wire indexes
 				        \item $$R_w = \prod_{j = 1}^{k} (B_{i_j} ^{L(j)})$$
 				        \item $R(w).append(R_w)$
 				    \end{enumerate}
-				    \item if $M(\tau) == unmarked$ and $\tau$ is $FO$ gate with input $w$ and $m$ outputs $w_1, w_2, ..., w_m$ then $M(\tau) = marked$:
+				    \item if $M(\tau) == unmarked$ and $\tau$ is \textbf{Fan-Out} gate with input $w$ and $m$ outputs $w_1, w_2, ..., w_m$ then $M(\tau) = marked$ and do the followings:
 				    \begin{enumerate}
 				        \item split $R(w)$ into  $m$ lists $R_{w_1}, ...,R_{w_m}$ such that $|R_{wire_i}| = |P(wire_i)|, i \in {1, 2, ..., m}$
-				        \item $R(w_i).append(R_{w_i}[j] * e(P(w_i)[j], g^s)), i \in \{1, 2, ..., m\}, j \in \{1, 2, ...,|R_{w_i}|\}$ 
+				        \item $R(w_i).append(R_{w_i}[j] \cdot e(P(w_i)[j], g^s)), i \in \{1, 2, ..., m\}, j \in \{1, 2, ...,|R_{w_i}|\}$ 
 				    \end{enumerate}
 				\end{itemize}
 			\end{itemize}
 		\end{itemize}
 \end{enumerate}
 
-\subsubsection{Correctness of extension}
+\subsubsection{Correctness}
 
 \begin{theorem}
 The \textit{Key-Policy Attribute based Encryption} scheme proposed above with the extension of threshold gates over boolean circuits satisfies the correctness property.
 \end{theorem}
 
-In this paper we'll discuss the correctness of our extension with \textit{threshold} gates over the schema in \cite{fltccd} assuming that the whole schema was already proven as being correct. Thus, in this section we'll prove that  
+In this paper we'll discuss the correctness of our extension with \textit{threshold} gates over the schema in \cite{fltccd} assuming that the whole schema was already proven as being correct. Thus, in this section we'll prove that given a threshold gate $(k, N)$ and a input value representing the key, this value can be divided to secrets using the \textit{share} procedure and then reconstructed with the \textit{reconstruction} procedure \textit{if and only if} the decryptor has at least $k$ of these shares.
+
+To keep things simple, we'll consider that these gates work only with values (not lists like it is in the actual extension), since in our extension we only iterate through the gate's output list and apply the below approach.
 
 \begin{proof}
 
+Let $e(g, g)^{s \cdot X}$ be the value that represents the key that has to be exchanged, and $\tau = (k, N)$ the threshold gate with one output wire $w$ and $n$ input wires $w_1, w_2, ...,w_n$.
+
+The \textit{share} procedure chooses a random polynomial $P(x) = X + a_1 \cdot x + a_2 \cdot x + ... + a_{k - 1} \cdot x^{k - 1}$ and assigns to the input values of $\tau$ the values $P(1), P(2), ..., P(N)$ as in \textit{Figure 7 }.
+
+\begin{center}
+  \begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth,height=5cm,keepaspectratio=true]{figures/shareThreshold.jpg}
+\caption{
+    The sharing procedure for threshold gates.
+}
+\end{figure}
+\end{center}
+
+In the \textit{reconstruct} phase (see \textit{Figure 8}) the values come as $e(g, g) ^ {s \cdot P(u)}$ or as $null$ for $w_u, \forall u \in \{1, 2, ... N\}$. In this proof we considered the not-null values the first $k$ inputs, but these inputs can have any distribution and also, it is not necessarily that the remaining values are null. After choosing these values (we consider the first K inputs) we can start to create our Lagrange polynomial value. In order to do that, we need firstly to compute $$L(j) = \prod_{jj \neq j, jj = 1}^{k}(\frac{0 - jj}{j - jj}) \textrm{ for all } j \in \{1, ..., k\}$$
+
+After having this we can reconstruct the key:
+
+$$R_w = \prod_{j = 1}^{k} (e(g, g) ^{s \cdot P (j) \cdot L(j)}) \Leftrightarrow$$
+$$R_w = e(g, g) ^{\sum_{j = 1}^{k} (s \cdot P (j) \cdot L(j)}) \Leftrightarrow$$
+$$R_w = e(g, g) ^{s \cdot \sum_{j = 1}^{k} (P (j) \cdot L(j))} \Leftrightarrow$$
+$$R_w = e(g, g) ^{s \cdot P(0)} \Leftrightarrow$$
+$$R_w = e(g, g) ^{s \cdot X}$$
+
+
+\begin{center}
+  \begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth,height=5cm,keepaspectratio=true]{figures/reconstructThreshold.jpg}
+\caption{
+    The reconstruction procedure for threshold gates.
+}
+\end{figure}
+\end{center}
+
+The correctness of the result above comes from the fact that for any $k$ values there exists a unique polynomial of degree $k - 1$ such that all points are part of the polynomial. Since we have these $k$ values and our secret $X$ represents $P(0)$, we can easily compute the Lagrange polynomial value for $0$ and thus obtain the  $X$.
+
+It remains to see what happens if the decryptor doesn't have all the $k - 1$ values: in this case if he gives different values to the \textit{reconstruction} phase, the $P(0)$ will be also different because, as mentioned above, this polynomial is unique. This statement is important because it proves that the construction is also \textbf{collision resistant}.
+
+\end{proof}
+
+\subsubsection{Complexity Analysis}
+
+It is obvious (the complexities come from the \textit{Shamir's secret procedure}) that the complexity of the \textit{threshold gates} for \textbf{share} and \textbf{reconstruct} procedures is based on $k$ and $N$ values, more exactly the first procedure is made in $O(N)$ and the reconstruction in $O(k^ 2)$ (assuming that the choosing of the $k$ values can optimised) for a single key gate output.
+
+The complexity of our extension with \textit{threshold gates}$(k, N)$ is the same if we rewrite the \textit{OR} and \textit{AND} gates with threshold and this is trivial to prove. The tricky part of this section is if we want to write access structures with \textit{threshold gates} with $N > 2$. To compare the complexity of our extension with the schema proposed in \cite{fltccd} we need to rewrite the boolean circuit that has threshold gates with \textit{OR, AND} and \textit{FO} gates. Below we attach some examples of these conversions.
+
+\paragraph{Examples}
+
+In \textit{Figure 9} we can see a conversion of a $(1, 4)$ \textit{threshold gate} to classical \textit{OR} and \textit{AND} gates. Comparing this structure complexity with the \textit{threshold gate} version we can easily notice that the \textit{sharing} procedure for the structure in figure makes more operations than our the threshold gate because the boolean circuit has more nodes. Also, the \textit{reconstruction} phase makes more steps for the same reason.
+
+\begin{center}
+  \begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth,height=3cm,keepaspectratio=true]{figures/1-4.jpg}
+\caption{
+    (1, 4) threshold gate conversion.
+}
+\end{figure}
+\end{center}
+
+In \textit{Figure 10} we can see that we make the same number of steps for the \textit{share} procedure, but for the \textit{reconstruction} procedure is a different story: for the structure in figure, the procedure is done in $k - 1$ steps (the number of internal nodes), but using our structure it increases to $k \cdot (k - 1)$ steps.
+
+\begin{center}
+  \begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth,height=3cm,keepaspectratio=true]{figures/4-4.jpg}
+\caption{
+    (4, 4) threshold gate conversion.
+}
+\end{figure}
+\end{center}
+
+Even though the complexity of the \textit{reconstruct} phase is better for classical gates for the structure in \textit{Figure 10}, in \textit{Figure 11} we can see that using threshold gates the boolean circuit with same semantics is more expressive, but also it is obviously more efficent, because in order to obtain the same semantics, it is needed to use lots of internal gates and also \textbf{Fan-Out} gates that are increase the complexity of the whole structure exponentially.
+
+\begin{center}
+  \begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth,height=6cm,keepaspectratio=true]{figures/2-4.jpg}
+\caption{
+    (2, 4) threshold gate conversion.
+}
+\end{figure}
+\end{center}
+
+
+\subsection{Security proof}
+
+\begin{theorem}
+The \textit{Key-Policy Attribute based Encryption} schema associated proposed in \cite{fltccd} associated with out proposed extension is secure under in the selective model under the decisional bilinear Diffie-Hellman assumption.
+\end{theorem}
+
+\begin{proof}
+
+In the \cite{fltccd} paper is described step by step the whole security proof of the schema, in this section we will redefine the \textit{FakeShare} procedure that was defined there with our extension of \textit{threshold gates} without altering the correctness of the proof there and by proving this way that our extension in secure under the \textit{decisional bilinear Diffie-Hellman assumption}.
+
+\paragraph{FakeShare($g^a, C$)}
+\begin{itemize}
+    \item let $M$ = $[unmarked, \forall \textrm{ gate} \in C]$
+	\item let $o$ = $C.root()$
+	\item $S(o) = [y] $
+	\item \textit{for each gate} $\tau \in C$ (top-down order) do the followings:
+    	\begin{itemize}
+    	    \item if $M(\tau) == unmarked$ and $\tau$ is \textbf{threshold gate $(k, m)$} with $w$ output and $m$ inputs $w_1, w_2, ..., w_m$, then $M(\tau) = marked$ and for each $i \in \{1, ...,|S(w)|\}$ do the followings:
+    	        \begin{enumerate}
+    	            \item if $C_w(A) = 1$
+    	            \begin{itemize}
+    	                \item choose uniformly random $a_1, a_2, ..., a_{k - 1} \in \mathbb{Z}_p$ and let $p(x) = S(w)[i] + a_1 \cdot x + a_2 \cdot x^2 + ... + a_{k-1} \cdot x^{k - 1}$ the associated polynomial from the \textit{Shamir's secret sharing} procedure
+    	            \item
+                     $\begin{cases}
+                       S(w_q).append(p(q)) &\quad\text{if } C_{w_q}(A) = 1\\
+                       S(w_q).append(g^{p(q)}) &\quad \text{if } C_{w_q}(A) = 0 \\
+                     \end{cases}$
+    	            \end{itemize}
+    	            
+    	            \item if $C_w(A) = 0$
+    	            \begin{itemize}
+    	                \item choose uniformly random $a_1, a_2, ..., a_{k - 1} \in \mathbb{Z}_p$ and let $p(x) = g^{S(w)[i]} + a_1 \cdot x + a_2 \cdot x^2 + ... + a_{k-1} \cdot x^{k - 1}$ the associated polynomial from the \textit{Shamir's secret sharing} procedure
+    	            \item
+                     $\begin{cases}
+                       S(w_q).append(p(q)) &\quad\text{if } C_{w_q}(A) = 1\\
+                       S(w_q).append(g^{p(q)}) &\quad \text{if } C_{w_q}(A) = 0 \\
+                     \end{cases}$
+    	            \end{itemize}
+    	        \end{enumerate}
+    	    \item if $M(\tau) == unmarked$ and $\tau$ is $FO$ gate with input $w$ and $m$ outputs $w_1, w_2, ..., w_m$ then $M(\tau) = marked$ do the followings:
+    	    \begin{itemize}
+    	        \item if $C_w(A) = C_{w_1}(A) = C_{w_2}(A) = ...= C_{w_m}(A) == 1$ then for each $i \in \{1, 2, ..., m\}$ and $j \in \{1, 2, ..., |S(w_i)|\}$:
+    	            \begin{enumerate}
+    	                \item choose randomly $x_1 \in \mathbb{Z}_p$ and compute $x_2 \in \mathbb{Z}_p$ such that $S(w_i)[j] = (x_1 + x_2)\textrm{mod}p$
+    	                \item $S(w).append(x_1)$
+    	                \item $P(w).append(g^{x_2})$
+    	            \end{enumerate}
+    	        \item if $C_w(A) = C_{w_1}(A) = C_{w_2}(A) = ...= C_{w_m}(A) == 0$ then for each $i \in \{1, 2, ..., m\}$ and $j \in \{1, 2, ..., |S(w_i)|\}$:
+    	            \begin{enumerate}
+    	                \item choose randomly $x_1 \in \mathbb{Z}_p$ and compute $g^{x_2}$ such that $S(w_i)[j] = g^{x_1} * g^{x_2} \Rightarrow g^{x_2} = \frac{S(w_i)[j]}{g^{x_1}} $
+    	                \item $S(w).append(g^{x_1})$
+    	                \item $P(w).append(g^{x_2})$
+    	            \end{enumerate}
+    	    \end{itemize}
+    	\end{itemize} 
+\end{itemize}
 
 
 \end{proof}
 
-\subsubsection{Complexity of extension}
+\subsection{Implementation}
 
-\subsection{Security proof}
+In this section we'll discuss the first implementation for the schema proposed in \cite{fltccd} and for our extension with \textit{threshold gates}. We won't get into too much detail here, we'll try to get the core of the implementation here and explain it. Mainly, we'll focus on the way that the proposed schema is translated into \textit{Java} code using the \textbf{jPBC} library. To get brief overview of our classes structure, we used and extended the standard structure for \textit{asymmetric encryption} that is currently implemented in the \textbf{Bouncy Castle} library. Also we used the \textit{Google Guava Library} for different operations on lists and data structures.
+
+\subsubsection{Setup}
+
+The \textbf{Setup} phase creates the \textit{PublicKey Parameters} and the \textit{MasterSecretKey Parameters} that are later used for the \textit{encryption} and \textit{decryption} phases. It uses the \textit{SecureRandom} class proposed by \textbf{Bouncy Castle} library in order generate cryptographic random numbers.
+
+First of all we have to define the bilinear map we're using. For this we already detailed the way of generating these structures in the \textbf{Bilinear maps} so we won't get into details here. In the final implementation we used a \textit{TypeACurveGenerator} with $160$ rBits and $512$ qBits. 
+
+\begin{lstlisting}
+pairing = PairingFactory.getPairing(new TypeACurveGenerator(rBits, qBits)
+			  .generate())
+\end{lstlisting} 
+
+The structure of the output of this method is classical so we'll use the \textit{AsymmetricCipherKeyPair} class for this purpose, where we define the following:
+
+\paragraph{PublicKey Parameters}
+
+$$PublicParameters = (p, G_1, G_2, g, e, n, Y = e(g, g)^y, \{T_i = g^{t_i} | i \in \{1, 2, ..., n\}\})$$
+
+\begin{lstlisting}
+
+p = pairing.getDegree();
+G_1 = pairing.getG1();
+G_2 = pairing.getG2();
+// we can return any element since we have a cyclic multiplicative group
+g = pairing.getG1().newRandomElement().getImmutable();
+e = pairing;
+n = numberOfAttributes;
+
+y = pairing.getZr().newRandomElement().getImmutable();
+
+capitalY = pairing.pairing(groupGenerator.duplicate(), 
+                           groupGenerator.duplicate())
+                  .powZn(y);
+
+Element[] ts = new Element[n];
+for(int i = 0; i < ts.length; ++i) {
+    ts[i] = pairing.getZr().newRandomElement();
+}
+
+Element[] capitalTs = new Element[n];
+for(int i = 0; i < ts.length; ++i) {
+    capitalTs[i] = groupGenerator.duplicate().powZn(ts[i]);
+}
+\end{lstlisting}
+
+\paragraph{MasterSecretKey Parameters}
+
+$$MasterKey = (y, \{t_1, t_2, ..., t_n\})$$
+
+\begin{lstlisting}
+y = pairing.getZr().newRandomElement().getImmutable();
+
+Element[] ts = new Element[n];
+for(int i = 0; i < ts.length; ++i) {
+    ts[i] = pairing.getZr().newRandomElement();
+}
+\end{lstlisting}
+
+We then encapsulate the above parameters in a \textit{AsymmetricCipherKeyPair} object and return it.
+
+
+\subsubsection{Encryption}
+
+In this phase takes part the actual encryption of the message. We give as input the message $m$, the attributes used for encryption $A$ and the $PublicParameters$ computed above and it will return the following tuple:
+
+$$EncryptionResult = (A, ciphertext = m \cdot e(g, g)^{ys}, g^s, \{E_i = g^{t_i \cdot s} | i \in A\})$$
+
+\begin{lstlisting}
+// choose randomly s
+s = publicKey.getPairing()
+             .getZr()
+             .newRandomElement()
+             .getImmutable();
+
+// The assignment is a string of length n 
+// with 0 for attribute indexes that are not used for encryption
+// and 1 for attribute indexes that are used for encryption
+for(int i = 0; i < n; ++i) {
+    if (assignment.charAt(i) == '1') {
+        e.add(publicKey.getCapitalTAt(i).powZn(s));
+    } else {
+        e.add(null);
+    }
+}
+
+// compute e(g, g)^{y * s} 
+Element ys = encKey.getPublicKey().getY().duplicate().powZn(s);
+
+encryptionResult.setE(e);
+encryptionResult.setCipherText(plaintext.mul(ys));
+encryptionResult.setGs(publicKey.getGroupGenerator().duplicate().powZn(s));
+encryptionResult.setA(assignment);
+\end{lstlisting}
+
+\subsubsection{Key Generation}
+
+This is the phase where the decryption of the the message begins. In a access control system, a user comes with the $MasterKey$ that he knows from the $Setup$ phase and he takes his access structure defined by the boolean circuit he owns (he may have more than one in some systems) and then uses the $KeyGeneration$ method to obtain a decryption key $D$ defined as follows:
+
+$$D = (P, D = \{D_i = g^{S(wire_i)[j] / t_i} | i \in \{1, 2, ..., n\} \textrm{ and } j \in \{1, 2, ... |S(i)|\}\})$$
+\begin{center}
+    where
+\end{center}
+$$(S, P) = Share(y, C)$$
+
+The \textit{Share} method takes as input the $y$ value defined in the $MasterKey$ and the boolean circuit $C$ given by the user that wants to access the resource and returns two dictionaries $S$ and $P$ that associate for every wire $w \in C$ a value in $\mathbb{Z}_p$, respectively $G_1$.
+
+To define the boolean circuit that the user uses for access the resource we already discussed in the \textbf{Boolean circuits} section where we showed how to define access structures with classical boolean gates, but also with \textit{threshold gates}.
+
+We define below the signature for the constructors used for creating the boolean circuits and their gates.
+
+\begin{itemize}
+    \item \textit{DefaultCircuit(int n, int q, DefaultGate[] gates)} where
+    \begin{itemize}
+        \item $n$ is the number of attributes ($|U|$) that the boolean circuit takes as input
+        \item $q$ is the number of internal gates
+        \item $gates$ the gate definition of the circuit (see below)
+    \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+    \item \textit{DefaultGate(GateType type, int index, int[] inputs, int k)} where
+    \begin{itemize}
+        \item $type$ is the enum type of the gate. Possible values: \textit{INPUT}, \textit{AND}, \textit{OR}, \textit{FO}, \textit{KN}
+        \item $index$ the index of the gate
+        \item $inputs$ a list of in gate indexes that the currently defined gate takes as input
+        \item $k$ (\textbf{optional}) value that is used for for specifing the required number of true values for a \textit{threshold gate} in order for the gate to be evaluated as $true$
+    \end{itemize}
+\end{itemize}
+
+Also when a \textit{boolean circuit} is created we call a procedure that labels all the wires of the boolean circuit $C$ with a specific index that is later used for assigning values to a specific wire by the $share$ and $reconstruct$ methods. The indexes are assigned top-down from the left to the right.
+
+The procedure of assigning values to each circuit wire is the following:
+
+\begin{lstlisting}
+Arrays.sort(gates, Comparator.comparingInt(DefaultGate::getIndex));
+List<DefaultGate> reversedGates = Lists.reverse(gates);
+Map<CircuitWire, Integer> wireIndexMapping = Maps.newHashMap();
+
+int currentIndex = 0;
+for (DefaultGate gate : reversedGates) {
+    if (gate.getType() == GateType.INPUT) {
+        continue;
+    }
+    for (int i = 0; i < gate.getInputSize(); i++) {
+        CircuitWire circuitWire = new CircuitWire();
+        circuitWire.setInputGateIndex(gate.getInput(i));
+        circuitWire.setOutputGateIndex(gate.getIndex());
+
+        wireIndexMapping.put(circuitWire, currentIndex);
+
+        currentIndex++;
+    }
+}
+\end{lstlisting}
+
+Then we define a method $getWireIndex$ that takes as input two index wires, the first one representing the input gate and the second one the output gate and returns the index of the wire specified by those gates. 
+
+We can define now the $Share$ procedure:
+
+\begin{lstlisting}
+// Parse the gates in top-down order
+List<DefaultGate> topDownGates = reverse(circuit.iterator());
+for (DefaultGate gate : topDownGates) {
+  switch (gate.getType()) {
+    case OR: {
+      // returns the list of elements of the current gate that have to be
+      // shared by this procedure
+      List<Element> elements = getSimpleGateElements(s, y, topDownGates, gate);
+      
+      // propagate unchanged the values
+      s.put(circuit.getWireIndex(gate.getInput(0), gate.getIndex()), elements);
+      s.put(circuit.getWireIndex(gate.getInput(1), gate.getIndex()), elements);
+
+      break;
+    }
+    case AND: {
+      // returns the list of elements of the current gate that have to be
+      // shared by this procedure
+      List<Element> elements = getSimpleGateElements(s, y, topDownGates, gate);
+
+      List<Element> l1 = Lists.newArrayList();
+      List<Element> l2 = Lists.newArrayList();
+        
+      // for each element of the wire list
+      for (Element element : elements) {
+        // choose randomly x1
+        Element x1 = pairing.getZr()
+            .newRandomElement();
+            
+        // pick x2 such that element = (x1 + x2) mod p
+        Element x2 = pairing.getZr()
+                            .newElement(
+                                x1.duplicate()
+                                  .toBigInteger()
+                                  .negate()
+                                  .add(element.toBigInteger())
+                                );
+
+        l1.add(x1);
+        l2.add(x2);
+      }
+
+      s.put(circuit.getWireIndex(gate.getInput(0), gate.getIndex()), l1);
+      s.put(circuit.getWireIndex(gate.getInput(1), gate.getIndex()), l2);
+
+      break;
+    }
+    case FO: {
+      // returns the list of elements of the FO gate that have to be
+      // shared by this procedure associated with each input gate
+      Map<Integer, List<Element>> elements = 
+            getFOGateElements(s, y, topDownGates, gate);
+      List<Element> sElements = Lists.newArrayList();
+
+      // for each input wire of the FO gate
+      for (Entry<Integer, List<Element>> entry : elements.entrySet()) {
+        List<Element> pElements = Lists.newArrayList();
+        
+        // for each element of the wire output list
+        for (Element element : entry.getValue()) {
+          // choose randomly x1
+          Element x1 = pairing.getZr()
+              .newRandomElement();
+          // pick x2 such that element = (x1 + x2) mod p
+          Element x2 = pairing.getZr()
+              .newElement(
+                x1.duplicate()
+                  .toBigInteger()
+                  .negate()
+                  .add(element.toBigInteger())
+                );
+
+          sElements.add(x1);
+          pElements.add(
+                    publicKeyParameters.getGroupGenerator()
+                                       .duplicate()
+                                       .powZn(x2)
+                    );
+        }
+        // assign to each output wires the p values
+        p.put(entry.getKey(), pElements);
+      }
+
+      // assign to the input wire the shares
+      s.put(circuit.getWireIndex(gate.getInput(0), gate.getIndex()), sElements);
+
+      break;
+    }
+    case KN: {
+      // returns the list of elements of the current gate that have to be
+      // shared by this procedure
+      List<Element> elements = getSimpleGateElements(s, y, topDownGates, gate);
+
+      // initilize with empty lists the input wires shares
+      for (int i = 0; i < gate.getInputSize(); i++) {
+        s.put(circuit.getWireIndex(gate.getInput(i), gate.getIndex()), 
+              Lists.newArrayList());
+      }
+
+      for (Element element : elements) {
+        // generate polynomial of K degree
+        // The polynomial has the following form: 
+        // P(x) = a0 + a_1 * x + ... + a_(k-1) * x^(k-1)
+        final List<Element> polynomial = Lists.newArrayList();
+        IntStream.range(0, gate.getK())
+            .forEach(
+              value -> polynomial.add(pairing.getZr().newRandomElement())
+            );
+        polynomial.set(0, element);
+        
+        // we create the values that have to be shared:
+        // P(1), P(2), ... P(n)
+        List<Element> elements = 
+          IntStream.range(1, gate.getInputSize() + 1)
+                   .mapToObj(value -> evaluatePolynomial(polynomial, value))
+                   .collect(Collectors.toList());
+
+        // we add the coresponding share to the input wires:
+        // for wire_j => P(j), for each j from 1 to n
+        for (int j = 0; j < gate.getInputSize(); j++) {
+          s.get(circuit.getWireIndex(gate.getInput(j), gate.getIndex()))
+           .add(elements.get(j));
+        }
+      }
+
+      break;
+    }
+    case INPUT: {
+
+      break;
+    }
+    default: break;
+  }
+}
+\end{lstlisting}
+
+The remaining methods that were not defined here are methods that can be implemented different than we did here. To be more specific, the methods $getSimpleGateElements$ or $getFOGateElements$ can be implemented brute-force by traversing the tree or more efficiently by passing the output gates also to each gate. Also, the $evaluatePolynomial$ method can be implemented at least using two ways: first one the classical method where the operations are simply evaluated and a more clever way using the \textit{Horner schema} in order to have a more numerical stability and efficiency.
+
+After having the \textit{share} procedure we can compute the output of the \textit{KeyGeneration} phase:
+
+\begin{lstlisting}
+
+// compute the decryption key
+Map<Integer, List<Element>> d = Maps.newHashMap();
+for (int i = 0; i < circuit.getN(); i++) {
+  d.put(i, Lists.newArrayList());
+  List<Element> elements = 
+        getSimpleGateElements(s, y, topDownGates, circuit.getGateAt(i));
+  
+  for (Element element : elements) {
+      Element dElement = params.getPublicKeyParameters()
+                               .getGroupGenerator()
+                               .duplicate()
+                               .powZn(
+                                  element.div(
+                                    params.getMasterSecretKeyParameters()
+                                    .getTAt(i)
+                                  )
+                                );
+
+        d.get(i).add(dElement);
+    }
+}
+
+return p, d;
+\end{lstlisting}
+
+\subsubsection{Decryption}
+
+This method returns the \textit{decryption key} from the encrypted one. It takes as input the $EncryptionResult$ and the shares given by the \textit{share} procedure. 
+
+\begin{lstlisting}
+Map<Integer, List<Element>> r = Maps.newHashMap();
+
+// traverse the boolean circuit bottom-up
+List<DefaultGate> bottomUpGates = newArrayList(circuit.iterator());
+for (DefaultGate gate : bottomUpGates) {
+  switch (gate.getType()) {
+    case INPUT: {
+      // assign to each wire that connects to an input gate the v_A value
+      // find the gates that are connected with current gate
+      for (DefaultGate outputGate : bottomUpGates) {
+        if (outputGate.getType() == INPUT) {
+          continue;
+        }
+        for (int i = 0; i < outputGate.getInputSize(); i++) {
+          if (outputGate.getInput(i) == gate.getIndex()) {
+            r.put(
+              circuit.getWireIndex(gate.getIndex(), outputGate.getIndex()), 
+              vA.get(gate.getIndex())
+            );
+          }
+        }
+      }
+
+      break;
+    }
+    case OR: {
+      // get the index of the output gate that connects with the gate
+      int outputGateIndex = getOutputGateIndex(bottomUpGates, gate);
+
+      List<Element> elements = Lists.newArrayList();
+      List<Element> elements1 = r.get(circuit.getWireIndex(gate.getInput(0), 
+                                      gate.getIndex()));
+      List<Element> elements2 = r.get(circuit.getWireIndex(gate.getInput(1), 
+                                      gate.getIndex()));
+      for (int i = 0; i < elements1.size(); i++) {
+        // choose one of the values that is not null 
+        // or null if both of the are null
+        if (elements1.get(i) == null) {
+          if (elements2.get(i) == null) {
+            elements.add(null);
+          } else {
+            elements.add(elements2.get(i).duplicate());
+          }
+        } else {
+          elements.add(elements1.get(i).duplicate());
+        }
+      }
+
+      // if this is a final gate, then return the decryption key
+      if (outputGateIndex == -1) {
+        return elements.get(0);
+      }
+      r.put(circuit.getWireIndex(gate.getIndex(), outputGateIndex), elements);
+
+      break;
+    }
+    case AND: {
+      // get the index of the output gate that connects with the gate
+      int outputGateIndex = getOutputGateIndex(bottomUpGates, gate);
+        
+      List<Element> elements = Lists.newArrayList();
+      List<Element> elements1 = r.get(circuit.getWireIndex(gate.getInput(0), 
+                                      gate.getIndex()));
+      List<Element> elements2 = r.get(circuit.getWireIndex(gate.getInput(1), 
+                                      gate.getIndex()));
+      // traverse the list of elements
+      for (int i = 0; i < elements1.size(); i++) {
+        // if one of the inputs is null, then reconstruct null
+        if (elements1.get(i) == null ||
+                elements2.get(i) == null) {
+            elements.add(null);
+        } else {
+            // otherwise add the product of the elements
+            Element element1 = elements1.get(i).duplicate();
+            Element element2 = elements2.get(i).duplicate();
+    
+            elements.add(element1.mul(element2));
+        }
+      }
+    
+      // if this is a final gate, then return the decryption key
+      if (outputGateIndex == -1) {
+        return elements.get(0);
+      }
+    
+      r.put(
+        circuit.getWireIndex(gate.getIndex(), outputGateIndex), 
+        elements
+      );
+    
+      break;
+    }
+    case FO: {
+      // get the list of indexes of the output gates that 
+      // connect with the current gate
+      List<Integer> foGateIndexes = getFOGateIndexes(bottomUpGates, gate);
+
+      // list splitting based on the P map
+      Map<Integer, List<Element>> splitRs = Maps.newHashMap();
+      // the input wire Rs
+      List<Element> gateRs = 
+        r.get(circuit.getWireIndex(gate.getInput(0), gate.getIndex()));
+      for (Integer foGateIndex : foGateIndexes) {
+        int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndex);
+        int listSize = secretKey.getPElementsAt(wireIndex).size();
+
+        splitRs.put(wireIndex, gateRs.subList(0, listSize));
+        gateRs = gateRs.subList(listSize, gateRs.size());
+      }
+
+      // for each gate that has as input the current gate
+      for (Integer foGateIndex : foGateIndexes) {
+        // determine the wire index determined by the current gate
+        // and the gate that has as input the current gate
+        int wireIndex = circuit.getWireIndex(gate.getIndex(), foGateIndex);
+        
+        // compute the values reconstructed for this wire
+        List<Element> elements = Lists.newArrayList();
+        for (int j = 0; j < splitRs.get(wireIndex).size(); j++) {
+          // propagate null if the the shared value is null
+          if (splitRs.get(wireIndex).get(j) == null) {
+            elements.add(null);
+            continue;
+          }
+          // multiplication of the value shared with the 
+          // pairing of the associated P value and g^s
+          Element element = splitRs.get(wireIndex)
+                                   .get(j)
+                                   .duplicate()
+                                   .mul(
+                                      pairing.pairing(
+                                        secretKey.getPElementsAt(wireIndex)
+                                                 .get(j), 
+                                        gs
+                                      )
+                                    );
+         
+          elements.add(element);
+        }
+        // add the reconstructed values to the wire
+        r.put(wireIndex, elements);
+      }
+
+      break;
+    }
+    case KN: {
+      // get the index of the output gate that connects with the gate
+      int outputGateIndex = getOutputGateIndex(bottomUpGates, gate);
+
+      // get the size of the shared lists
+      // notice that the list sizes must be equal
+      int size = -1;
+      for (int i = 0; i < gate.getInputSize(); i++) {
+        if (size == -1) {
+          size = r.get(circuit.getWireIndex(gate.getInput(i), gate.getIndex()))
+                  .size();
+        }
+      }
+
+      // initilize the output wire of the current gate with empty list
+      r.put(
+        circuit.getWireIndex(gate.getIndex(), outputGateIndex), 
+        Lists.newArrayList()
+      );
+      
+      for (int i = 0; i < size; i++) {
+        Element element;
+        List<Integer> ks = Lists.newArrayList();
+        List<Element> elements = Lists.newArrayList();
+        // choose the first k elements from inputs that are not null
+        for (int j = 0; j < gate.getInputSize(); j++) {
+          List<Element> rElements = 
+            r.get(circuit.getWireIndex(
+              gate.getInputIndexAt(j), 
+              gate.getIndex()
+              )
+            );
+          if (rElements.get(i) == null || ks.size() >= gate.getK()) {
+			continue;
+		  }
+
+          ks.add(j + 1);
+          elements.add(rElements.get(i));
+        }
+
+        // for each of these k values
+        for (int j = 0; j < ks.size(); j++) {
+          // compute the product value from the Lagrange polynomial
+          // associated with each P(ks[j]) value
+          element = pairing.getZr().newOneElement();
+          Element xjElement = pairing.getZr().newElement(ks.get(j));
+
+          for (int jj = 0; jj < gate.getK(); jj++) {
+            if (jj == j) {
+              continue;
+            }
+
+            Element zeroElement = pairing.getZr().newZeroElement();
+            Element xjjElement = pairing.getZr().newElement(ks.get(jj));
+
+            element.mul(zeroElement.duplicate()
+                .sub(xjjElement)
+                .div(xjElement.duplicate().sub(xjjElement))
+            );
+          }
+
+          elements.get(j).powZn(element);
+        }
+
+        // multiplication of all the inputs that results
+        // to the reconstruction of the P(0) Lagrange
+        // polynomial value
+        element = elements.get(0);
+        for (int j = 1; j < gate.getK(); j++) {
+          element = element.mul(elements.get(j));
+        }
+
+        // assign the obtained value to that wire
+        r.get(circuit.getWireIndex(gate.getIndex(), outputGateIndex))
+         .add(element);
+      }
+
+      break;
+    }
+    default:
+      break;
+  }
+
+\end{lstlisting}
 
 \subsection{Applications}
-
-\subsection{Implementation}
 
 \section{Conclusions}
 
